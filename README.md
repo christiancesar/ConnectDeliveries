@@ -8,7 +8,7 @@
   ```bash
   $ https://github.com/christiancesar/SDKDeliveryApis.git
   ```
-  Passo 2: Aponte no seu LibraryPath as Units
+  Passo 2: Aponte no seu LibraryPath as Units `\.src\`
   
   Passo 3: Pronto!
 
@@ -18,6 +18,29 @@
   * PostMan
   * Rad Studio 10.3 Community
 
+# Developer
+- [x] Authentication [POST]
+- [ ] Merchant and Merchant V2
+  - [x] Merchants
+  - [ ] Unavailabilities [GET]
+  - [ ] Unavailabilities [DELETE]
+  - [ ] Unavailabilities:now [POST]
+  - [ ] Merchant Availability [GET]
+- [ ] Order
+  - [ ] Polling [GET]
+  - [ ] Acknowledgment [POST]
+  - [ ] Reference [GET]
+  - [ ] Integration [POST]
+  - [ ] Confirmation [POST]
+  - [ ] Dispatch [POST]
+  - [ ] ReadyToDeliver [POST]
+  - [ ] CancellationRequested [POST]
+  - [ ] CancellationAccepted [POST]
+  - [ ] CancellationDenied [POST]
 # Features
+  - [ ] Catalog V2
+  - [ ] Reviews
+  - [ ] Delivery Information
+ 
 
 # Licence
