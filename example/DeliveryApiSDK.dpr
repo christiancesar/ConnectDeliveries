@@ -7,7 +7,8 @@ uses
   uFormMain in 'uFormMain.pas' {FormMain},
   uiFood in '..\src\uiFood.pas',
   uiFood.Authentication in '..\src\uiFood.Authentication.pas',
-  uiFood.Credential in '..\src\uiFood.Credential.pas';
+  uiFood.Credential in '..\src\uiFood.Credential.pas',
+  uClassBaseDelivery in '..\src\Common\uClassBaseDelivery.pas';
 
 {$R *.res}
 

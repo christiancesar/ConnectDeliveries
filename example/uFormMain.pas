@@ -6,8 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
   Vcl.Imaging.pngimage, System.Actions, Vcl.ActnList, Vcl.Touch.GestureMgr,
-  REST.Types, Vcl.Buttons, REST.Client, Data.Bind.Components,
-  Data.Bind.ObjectScope, REST.Authenticator.OAuth, uIfood.Credential;
+  REST.Types, Vcl.Buttons, REST.Client, uIfood.Credential;
 
 type
   TFormMain = class(TForm)
@@ -16,22 +15,20 @@ type
     ActionList1: TActionList;
     Action1: TAction;
     GestureManager1: TGestureManager;
-    rRequest: TRESTRequest;
-    rClient: TRESTClient;
     Memo1: TMemo;
     Panel1: TPanel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    rResponse: TRESTResponse;
-    SpeedButton3: TSpeedButton;
+    btnGetToken: TSpeedButton;
+    btnClear: TSpeedButton;
+    btnMerchants: TSpeedButton;
     procedure CloseButtonClick(Sender: TObject);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
-    procedure SpeedButton3Click(Sender: TObject);
+    procedure btnClearClick(Sender: TObject);
+    procedure btnGetTokenClick(Sender: TObject);
+    procedure btnMerchantsClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
     FToken: String;
     FCredential: TCredential;
+    FClient: TRESTClient;
 
     { Private declarations }
   public
@@ -44,7 +41,7 @@ var
 
 implementation
 uses
-  System.JSON, REST.Json, uIfood;
+  System.JSON, REST.Json, uIfood, uiFood.Authentication;
 
 {$R *.dfm}
 
@@ -69,16 +66,26 @@ begin
   jvJson := joJson.FindValue('credenciais.ifood.homologacao');
   FCredential := TCredential.Create;
   FCredential := TJson.JsonToObject<TCredential>(jvJson as TJSONObject);
+
+  FClient:= TRESTClient.Create(Self);
 end;
 
-procedure TFormMain.SpeedButton1Click(Sender: TObject);
+procedure TFormMain.btnGetTokenClick(Sender: TObject);
 var
-  jvJson: TJSONValue;
   oIfood: Tifood;
+  oAuth: TAuthentication;
 begin
+  try
+    try
+      oIfood.Create('https://pos-api.ifood.com.br', CONTENTTYPE_MULTIPART_FORM_DATA);
+      oAuth := oIfood.Authentication(FCredential);
+    except on E: Exception do
+    end;
+  finally
+    FreeAndNil(oAuth);
+    FreeAndNil(oIfood);
+  end;
 
-  oIfood.Create('https://pos-api.ifood.com.br');
-  oIfood.Authentication(FCredential);
 
 
 
@@ -110,20 +117,20 @@ begin
 
 end;
 
-procedure TFormMain.SpeedButton2Click(Sender: TObject);
+procedure TFormMain.btnClearClick(Sender: TObject);
 begin
   Memo1.Lines.Clear;
 end;
 
-procedure TFormMain.SpeedButton3Click(Sender: TObject);
+procedure TFormMain.btnMerchantsClick(Sender: TObject);
 begin
 //  rRequest.Params.Clear;
-    rRequest.Method := rmGET;
-    rRequest.Resource := '/v1.0/merchants';
-    rRequest.Params.AddHeader('Authorization', 'Bearer ' + FToken);
-    rRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
-    rRequest.Execute;
-    Memo1.Lines.Add(format('Code: %s %s Message: %s', [rResponse.StatusCode.ToString, rResponse.StatusText, rResponse.JSONText]));
+//    rRequest.Method := rmGET;
+//    rRequest.Resource := '/v1.0/merchants';
+//    rRequest.Params.AddHeader('Authorization', 'Bearer ' + FToken);
+//    rRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+//    rRequest.Execute;
+//    Memo1.Lines.Add(format('Code: %s %s Message: %s', [rResponse.StatusCode.ToString, rResponse.StatusText, rResponse.JSONText]));
 end;
 
 end.

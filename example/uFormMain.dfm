@@ -163,6 +163,8 @@ object FormMain: TFormMain
     Lines.Strings = (
       'Memo1')
     TabOrder = 1
+    ExplicitLeft = -16
+    ExplicitTop = 107
   end
   object Panel1: TPanel
     Left = 0
@@ -171,36 +173,36 @@ object FormMain: TFormMain
     Height = 82
     Align = alBottom
     TabOrder = 2
-    object SpeedButton1: TSpeedButton
+    object btnGetToken: TSpeedButton
       Left = 965
       Top = 1
       Width = 187
       Height = 80
       Align = alRight
       Caption = 'GetToken'
-      OnClick = SpeedButton1Click
+      OnClick = btnGetTokenClick
       ExplicitLeft = 1158
       ExplicitTop = 6
     end
-    object SpeedButton2: TSpeedButton
+    object btnClear: TSpeedButton
       Left = 778
       Top = 1
       Width = 187
       Height = 80
       Align = alRight
       Caption = 'Clear'
-      OnClick = SpeedButton2Click
+      OnClick = btnClearClick
       ExplicitLeft = 959
       ExplicitTop = 6
     end
-    object SpeedButton3: TSpeedButton
+    object btnMerchants: TSpeedButton
       Left = 1152
       Top = 1
       Width = 187
       Height = 80
       Align = alRight
       Caption = 'Merchants'
-      OnClick = SpeedButton3Click
+      OnClick = btnMerchantsClick
       ExplicitLeft = 1221
       ExplicitTop = 6
     end
@@ -224,27 +226,5 @@ object FormMain: TFormMain
             GestureID = sgiUp
           end>
       end>
-  end
-  object rRequest: TRESTRequest
-    Accept = 'application/json'
-    AcceptCharset = 'utf-8'
-    Client = rClient
-    Params = <
-      item
-        Kind = pkHTTPHEADER
-      end>
-    Response = rResponse
-    SynchronizedEvents = False
-    Left = 296
-    Top = 424
-  end
-  object rClient: TRESTClient
-    Params = <>
-    Left = 248
-    Top = 424
-  end
-  object rResponse: TRESTResponse
-    Left = 352
-    Top = 424
   end
 end

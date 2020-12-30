@@ -2,20 +2,17 @@ unit uiFood;
 
 interface
 uses
-  uIfood.Authentication, uIfood.Credential, REST.Client, REST.Types;
+  uIfood.Authentication, uIfood.Credential, uClassBaseDelivery, REST.Types;
 
 Type
-  TiFood = class
+  TiFood = class(TClassBaseDelivery)
   private
     { private declarations }
   protected
-    FClient: TRESTClient;
-    FResquest: TRESTRequest;
-    FResponse: TRestResponse;
     { protected declarations }
   public
-    class function Authentication(const Credential: TCredential): TAuthentication;
-    constructor Create(const BaseUrl: String); reintroduce;
+    function Authentication(const Credential: TCredential): TAuthentication;
+    constructor Create(ABaseUrl, AContentType: String);
     destructor Destroy; override;
     { public declarations }
 
@@ -27,11 +24,15 @@ Type
 
 implementation
 
+uses
+  System.SysUtils, REST.Json, System.Json;
+
 { TiFood }
 
-class function TiFood.Authentication(
-  const Credential: TCredential): TAuthentication;
+function TiFood.Authentication(const Credential: TCredential): TAuthentication;
 begin
+  Result := TAuthentication.Create;
+
   FResquest.Method := rmPOST;
   FResquest.Resource := '/oauth/token';
   FResquest.AddParameter('client_id', Credential.client_id);
@@ -40,18 +41,19 @@ begin
   FResquest.AddParameter('username', Credential.username);
   FResquest.AddParameter('password', Credential.password);
   FResquest.Execute;
-  FRe
+
+  if FResponse.Status.Success then
+  begin
+    Result := TJson.JsonToObject<TAuthentication>(FResponse.JSONValue as TJSONObject);
+  end
+  else
+    raise Exception.Create(Format('Code: %s %s Message: %s', [FResponse.StatusCode.ToString, FResponse.StatusText, FResponse.JSONText]));
 
 end;
 
-constructor TiFood.Create(const BaseUrl: String);
+constructor TiFood.Create(ABaseUrl, AContentType: String);
 begin
-  FClient := TRESTClient.Create(BaseUrl);
-  FResquest := TRESTRequest.Create(nil);
-  FResponse := TRestResponse.Create(nil);
-
-  FResquest.Client := FClient;
-  FResquest.Response := FResponse;
+    inherited Create(ABaseUrl, AContentType);
 end;
 
 destructor TiFood.Destroy;
