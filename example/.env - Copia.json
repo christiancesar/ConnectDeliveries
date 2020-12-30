@@ -1,0 +1,25 @@
+{
+    "credenciais": {
+        "ifood":{
+            "homologacao":{
+                "client_id": "", 
+                "client_id": "",
+                "client_secret": "", 
+                "grant_type": "",
+                "username": "",
+                "password": ""
+            },
+            "producao":{
+
+            }            
+        },
+        "deliverymuch":{
+            "homologacao":{
+
+            },
+            "producao":{
+                
+            }
+        }
+    }
+}
