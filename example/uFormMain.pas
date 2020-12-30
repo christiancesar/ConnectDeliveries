@@ -41,7 +41,8 @@ var
 
 implementation
 uses
-  System.JSON, REST.Json, uIfood, uiFood.Authentication;
+  System.JSON, REST.Json, uIfood, uiFood.Authentication,
+  uiFood.Merchant, System.Generics.Collections;
 
 {$R *.dfm}
 
@@ -77,44 +78,16 @@ var
 begin
   try
     try
-      oIfood.Create('https://pos-api.ifood.com.br', CONTENTTYPE_MULTIPART_FORM_DATA);
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br', CONTENTTYPE_MULTIPART_FORM_DATA);
       oAuth := oIfood.Authentication(FCredential);
+      FToken := oAuth.access_token;
+      Memo1.Lines.Add('Token: ' + FToken);
     except on E: Exception do
     end;
   finally
     FreeAndNil(oAuth);
     FreeAndNil(oIfood);
   end;
-
-
-
-
-//  rClient.BaseURL := 'https://pos-api.ifood.com.br';
-//  rClient.Accept := 'application/json';
-//  rClient.AcceptCharset := 'utf-8';
-//  rClient.ContentType :=  CONTENTTYPE_MULTIPART_FORM_DATA;
-//
-//  rRequest.Method := rmPOST;
-//  rRequest.Resource := '/oauth/token';
-//  rRequest.AddParameter('client_id', FCredential.Fclient_id);
-//  rRequest.AddParameter('client_secret', FCredential.client_secret);
-//  rRequest.AddParameter('grant_type', FCredential.grant_type);
-//  rRequest.AddParameter('username', FCredential.username);
-//  rRequest.AddParameter('password', FCredential.password);
-//  rRequest.Execute;
-//
-//  Memo1.Lines.Add(format('Code: %s %s Message: %s', [rResponse.StatusCode.ToString, rResponse.StatusText, rResponse.JSONText]));
-//  jvJson := rResponse.JSONValue;
-
-  {Exemplo de buscando um valor dentro de um objetoJson}
-//  FToken := jvJson.GetValue<string>('access_token','');
-
-  {Exemplo de parse de Json para Objeto Delphi}
-//  oAuth := TAuth.Create;
-//  oAuth := TJson.JsonToObject<TAuth>(rResponse.JSONValue as TJSONObject);
-
-
-
 end;
 
 procedure TFormMain.btnClearClick(Sender: TObject);
@@ -123,7 +96,21 @@ begin
 end;
 
 procedure TFormMain.btnMerchantsClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  oMerchants: TObjectList<TMerchant>;
 begin
+  try
+    try
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br', CONTENTTYPE_NONE);
+      oIfood.addHeader('Authorization', 'Bearer ' + FToken);
+      oMerchants := oIfood.Merchant;
+    except on E: Exception do
+    end;
+  finally
+    FreeAndNil(oMerchants);
+    FreeAndNil(oIfood);
+  end;
 //  rRequest.Params.Clear;
 //    rRequest.Method := rmGET;
 //    rRequest.Resource := '/v1.0/merchants';

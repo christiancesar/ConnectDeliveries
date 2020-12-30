@@ -8,7 +8,8 @@ uses
   uiFood in '..\src\uiFood.pas',
   uiFood.Authentication in '..\src\uiFood.Authentication.pas',
   uiFood.Credential in '..\src\uiFood.Credential.pas',
-  uClassBaseDelivery in '..\src\Common\uClassBaseDelivery.pas';
+  uClassBaseDelivery in '..\src\Common\uClassBaseDelivery.pas',
+  uiFood.Merchant in '..\src\uiFood.Merchant.pas';
 
 {$R *.res}
 

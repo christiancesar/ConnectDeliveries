@@ -9,12 +9,13 @@ Type
 
   protected
     FClient: TRESTClient;
-    FResquest: TRESTRequest;
+    FRequest: TRESTRequest;
     FResponse: TRestResponse;
     { protected declarations }
 
   public
-    constructor Create(const ABaseUrl, AContentType: String);
+    procedure addHeader(AName, AValue: String);
+    constructor Create(const ABaseUrl: String);
     destructor Destroy; override;
 
   published
@@ -27,21 +28,25 @@ uses
 
 { TClassBaseDelivery }
 
-constructor TClassBaseDelivery.Create(const ABaseUrl, AContentType: String);
+procedure TClassBaseDelivery.addHeader(AName, AValue: String);
+begin
+  FRequest.Params.AddHeader(AName, AValue);
+end;
+
+constructor TClassBaseDelivery.Create(const ABaseUrl: String);
 begin
   FClient := TRESTClient.Create(ABaseUrl);
-  FClient.ContentType := AContentType;
-  FResquest := TRESTRequest.Create(nil);
+  FRequest := TRESTRequest.Create(nil);
   FResponse := TRestResponse.Create(nil);
 
-  FResquest.Client := FClient;
-  FResquest.Response := FResponse;
+  FRequest.Client := FClient;
+  FRequest.Response := FResponse;
 end;
 
 destructor TClassBaseDelivery.Destroy;
 begin
   FreeAndNil(FClient);
-  FreeAndNil(FResquest);
+  FreeAndNil(FRequest);
   FreeAndNil(FResponse);
 
   inherited;

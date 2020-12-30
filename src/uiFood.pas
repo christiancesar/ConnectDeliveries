@@ -2,7 +2,8 @@ unit uiFood;
 
 interface
 uses
-  uIfood.Authentication, uIfood.Credential, uClassBaseDelivery, REST.Types;
+  uIfood.Authentication, uIfood.Credential, uClassBaseDelivery, REST.Types,
+  uIfood.Merchant, System.Generics.Collections;
 
 Type
   TiFood = class(TClassBaseDelivery)
@@ -11,7 +12,12 @@ Type
   protected
     { protected declarations }
   public
+    {Authentication}
     function Authentication(const Credential: TCredential): TAuthentication;
+
+    {Merchants}
+    function Merchant: TObjectList<TMerchant>;
+
     constructor Create(ABaseUrl, AContentType: String);
     destructor Destroy; override;
     { public declarations }
@@ -21,6 +27,7 @@ Type
     { published declarations }
 
   end;
+
 
 implementation
 
@@ -33,14 +40,14 @@ function TiFood.Authentication(const Credential: TCredential): TAuthentication;
 begin
   Result := TAuthentication.Create;
 
-  FResquest.Method := rmPOST;
-  FResquest.Resource := '/oauth/token';
-  FResquest.AddParameter('client_id', Credential.client_id);
-  FResquest.AddParameter('client_secret', Credential.client_secret);
-  FResquest.AddParameter('grant_type', Credential.grant_type);
-  FResquest.AddParameter('username', Credential.username);
-  FResquest.AddParameter('password', Credential.password);
-  FResquest.Execute;
+  FRequest.Method := rmPOST;
+  FRequest.Resource := '/oauth/token';
+  FRequest.AddParameter('client_id', Credential.client_id);
+  FRequest.AddParameter('client_secret', Credential.client_secret);
+  FRequest.AddParameter('grant_type', Credential.grant_type);
+  FRequest.AddParameter('username', Credential.username);
+  FRequest.AddParameter('password', Credential.password);
+  FRequest.Execute;
 
   if FResponse.Status.Success then
   begin
@@ -53,13 +60,39 @@ end;
 
 constructor TiFood.Create(ABaseUrl, AContentType: String);
 begin
-    inherited Create(ABaseUrl, AContentType);
+    inherited Create(ABaseUrl);
+    FClient.Accept := 'application/json';
+    FClient.AcceptCharset := 'utf-8';
+    FClient.ContentType := AContentType;
 end;
 
 destructor TiFood.Destroy;
 begin
 
   inherited;
+end;
+
+function TiFood.Merchant: TObjectList<TMerchant>;
+var
+  I: Integer;
+begin
+  Result := TObjectList<TMerchant>.Create;
+  FRequest.Method := rmGET;
+  FRequest.Resource := '/v1.0/merchants';
+  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+  FRequest.Execute;
+
+  if FResponse.Status.Success then
+  begin
+
+    for I := 0 to (FResponse.JSONValue as TJSONArray).Count - 1 do
+    begin
+      Result.Add(TJson.JsonToObject<TMerchant>(((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
+    end;
+
+  end
+  else
+    raise Exception.Create(Format('Code: %s %s Message: %s', [FResponse.StatusCode.ToString, FResponse.StatusText, FResponse.JSONText]));
 end;
 
 end.

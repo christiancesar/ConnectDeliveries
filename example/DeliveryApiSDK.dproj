@@ -109,6 +109,7 @@
         <DCCReference Include="..\src\uiFood.Authentication.pas"/>
         <DCCReference Include="..\src\uiFood.Credential.pas"/>
         <DCCReference Include="..\src\Common\uClassBaseDelivery.pas"/>
+        <DCCReference Include="..\src\uiFood.Merchant.pas"/>
         <None Include="..\.env.json"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
