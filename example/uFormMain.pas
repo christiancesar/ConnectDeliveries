@@ -111,13 +111,6 @@ begin
     FreeAndNil(oMerchants);
     FreeAndNil(oIfood);
   end;
-//  rRequest.Params.Clear;
-//    rRequest.Method := rmGET;
-//    rRequest.Resource := '/v1.0/merchants';
-//    rRequest.Params.AddHeader('Authorization', 'Bearer ' + FToken);
-//    rRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
-//    rRequest.Execute;
-//    Memo1.Lines.Add(format('Code: %s %s Message: %s', [rResponse.StatusCode.ToString, rResponse.StatusText, rResponse.JSONText]));
 end;
 
 end.
