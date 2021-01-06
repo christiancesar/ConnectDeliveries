@@ -38,6 +38,10 @@ uses
 
 function TiFood.Authentication(const Credential: TCredential): TAuthentication;
 begin
+
+  if Assigned(Credential) then
+    raise Exception.Create('Credencial fazia!');
+
   Result := TAuthentication.Create;
 
   FRequest.Method := rmPOST;
@@ -81,7 +85,7 @@ begin
   FRequest.Resource := '/v1.0/merchants';
   FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
   FRequest.Execute;
-
+  FRequest.Params.Clear;
   if FResponse.Status.Success then
   begin
 

@@ -5,11 +5,11 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   uFormMain in 'uFormMain.pas' {FormMain},
-  uiFood in '..\src\uiFood.pas',
-  uiFood.Authentication in '..\src\uiFood.Authentication.pas',
-  uiFood.Credential in '..\src\uiFood.Credential.pas',
   uClassBaseDelivery in '..\src\Common\uClassBaseDelivery.pas',
-  uiFood.Merchant in '..\src\uiFood.Merchant.pas';
+  uiFood.Authentication in '..\src\iFood\ParseClasses\uiFood.Authentication.pas',
+  uiFood.Credential in '..\src\iFood\ParseClasses\uiFood.Credential.pas',
+  uiFood.Merchant in '..\src\iFood\ParseClasses\uiFood.Merchant.pas',
+  uiFood in '..\src\iFood\uiFood.pas';
 
 {$R *.res}
 

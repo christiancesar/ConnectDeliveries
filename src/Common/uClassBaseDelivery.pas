@@ -35,6 +35,9 @@ end;
 
 constructor TClassBaseDelivery.Create(const ABaseUrl: String);
 begin
+  if ABaseUrl.IsEmpty then
+    raise Exception.Create('Url base não pode ser vazia!');
+
   FClient := TRESTClient.Create(ABaseUrl);
   FRequest := TRESTRequest.Create(nil);
   FResponse := TRestResponse.Create(nil);
