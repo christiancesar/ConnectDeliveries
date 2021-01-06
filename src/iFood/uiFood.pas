@@ -86,6 +86,7 @@ begin
   FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
   FRequest.Execute;
   FRequest.Params.Clear;
+
   if FResponse.Status.Success then
   begin
 

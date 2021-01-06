@@ -3,22 +3,44 @@
         "ifood":{
             "homologacao":{
                 "client_id": "", 
-                "client_id": "",
                 "client_secret": "", 
                 "grant_type": "",
                 "username": "",
                 "password": ""
             },
             "producao":{
-
+                "client_id": "", 
+                "client_secret": "", 
+                "grant_type": "",
+                "username": "",
+                "password": ""
             }            
         },
         "deliverymuch":{
             "homologacao":{
+                "client_id": "", 
+                "client_secret": "", 
+                "grant_type": "",
+                "username": "",
+                "password": "",
+                "scope": ""
+            },
+            "producao":{
+                "client_id": "",                 
+                "client_secret": "", 
+                "grant_type": "",
+                "username": "",
+                "password": "",
+                "scope": ""             
+            }
+        },
+        "tonolucro":{
+            "homologacao":{
+                "token":""
 
             },
             "producao":{
-                
+                "token":""                
             }
         }
     }
