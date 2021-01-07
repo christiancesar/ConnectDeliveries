@@ -3,7 +3,7 @@ unit uiFood;
 interface
 
 uses
-  uiFood.Authentication, uiFood.Credential, uClassBaseDelivery, REST.Types,
+  uiFood.Authentication, uiFood.Credential, uBaseDelivery, REST.Types,
   uiFood.Merchant, System.Generics.Collections, uiFood.Unavailability,
   uiFood.Availability, uiFood.Polling, System.Classes;
 
