@@ -1,4 +1,5 @@
-# SDKDeliveryApis :triangular_flag_on_post:
+[![Connect-Delivery.png](https://i.postimg.cc/FzDwPXZt/Connect-Delivery.png)](https://postimg.cc/p550T74k)
+# ConnectDelivery :triangular_flag_on_post:
   
   O intuito deste projeto é fornecer facilidade de integração das Apis de Deliverys para a linguagem Delphi. Foque em sua regra de negócio e deixe o restante conosco!
 
