@@ -104,7 +104,7 @@ begin
     try
       oIfood := Tifood.Create('https://pos-api.ifood.com.br', CONTENTTYPE_NONE);
       oIfood.addHeader('Authorization', 'Bearer ' + FToken);
-      oMerchants := oIfood.Merchant;
+      oMerchants := oIfood.Merchants;
     except on E: Exception do
     end;
   finally

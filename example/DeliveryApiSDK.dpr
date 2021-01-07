@@ -9,7 +9,12 @@ uses
   uiFood.Authentication in '..\src\iFood\ParseClasses\uiFood.Authentication.pas',
   uiFood.Credential in '..\src\iFood\ParseClasses\uiFood.Credential.pas',
   uiFood.Merchant in '..\src\iFood\ParseClasses\uiFood.Merchant.pas',
-  uiFood in '..\src\iFood\uiFood.pas';
+  uiFood in '..\src\iFood\uiFood.pas',
+  uiFood.Unavailability in '..\src\ifood\parseClasses\uiFood.Unavailability.pas',
+  uiFood.Availability in '..\src\ifood\parseClasses\uiFood.Availability.pas',
+  uiFood.Validation in '..\src\ifood\parseClasses\uiFood.Validation.pas',
+  uiFood.Reopenable in '..\src\ifood\parseClasses\uiFood.Reopenable.pas',
+  uiFood.Message in '..\src\ifood\parseClasses\uiFood.Message.pas';
 
 {$R *.res}
 

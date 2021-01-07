@@ -1,9 +1,11 @@
 unit uiFood;
 
 interface
+
 uses
-  uIfood.Authentication, uIfood.Credential, uClassBaseDelivery, REST.Types,
-  uIfood.Merchant, System.Generics.Collections;
+  uiFood.Authentication, uiFood.Credential, uClassBaseDelivery, REST.Types,
+  uiFood.Merchant, System.Generics.Collections, uiFood.Unavailability,
+  uiFood.Availability;
 
 Type
   TiFood = class(TClassBaseDelivery)
@@ -12,11 +14,21 @@ Type
   protected
     { protected declarations }
   public
-    {Authentication}
+    { Authentication }
     function Authentication(const Credential: TCredential): TAuthentication;
 
-    {Merchants}
-    function Merchant: TObjectList<TMerchant>;
+    { Merchant v1 }
+    function Merchants: TObjectList<TMerchant>;
+
+    function Unavailabilities(AMerchantUUID: String)
+      : TObjectList<TUnavailability>; Overload;
+    function Unavailabilities(AMerchantUUID, AUnavailabilityId: String)
+      : Boolean; Overload;
+    function Unavailabilities(AMerchantUUID: String): TUnavailability; Overload;
+
+    { Merchant v2 }
+    function MerchantAvailability(AMerchantUUID: String)
+      : TObjectList<TAvailability>;
 
     constructor Create(ABaseUrl, AContentType: String);
     destructor Destroy; override;
@@ -27,7 +39,6 @@ Type
     { published declarations }
 
   end;
-
 
 implementation
 
@@ -55,19 +66,22 @@ begin
 
   if FResponse.Status.Success then
   begin
-    Result := TJson.JsonToObject<TAuthentication>(FResponse.JSONValue as TJSONObject);
+    Result := TJson.JsonToObject<TAuthentication>
+      (FResponse.JSONValue as TJSONObject);
   end
   else
-    raise Exception.Create(Format('Code: %s %s Message: %s', [FResponse.StatusCode.ToString, FResponse.StatusText, FResponse.JSONText]));
+    raise Exception.Create(Format('Code: %s %s Message: %s',
+      [FResponse.StatusCode.ToString, FResponse.StatusText,
+      FResponse.JSONText]));
 
 end;
 
 constructor TiFood.Create(ABaseUrl, AContentType: String);
 begin
-    inherited Create(ABaseUrl);
-    FClient.Accept := 'application/json';
-    FClient.AcceptCharset := 'utf-8';
-    FClient.ContentType := AContentType;
+  inherited Create(ABaseUrl);
+  FClient.Accept := 'application/json';
+  FClient.AcceptCharset := 'utf-8';
+  FClient.ContentType := AContentType;
 end;
 
 destructor TiFood.Destroy;
@@ -76,7 +90,35 @@ begin
   inherited;
 end;
 
-function TiFood.Merchant: TObjectList<TMerchant>;
+function TiFood.MerchantAvailability(
+  AMerchantUUID: String): TObjectList<TAvailability>;
+var
+  I: Integer;
+begin
+  Result := TObjectList<TAvailability>.Create;
+  FRequest.Method := rmGET;
+  FRequest.Resource := Format('/v2.0/merchants/%s/availabilities', [AMerchantUUID]);
+  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+  FRequest.Execute;
+  FRequest.Params.Clear;
+
+  if FResponse.Status.Success then
+  begin
+
+    for I := 0 to (FResponse.JSONValue as TJSONArray).Count - 1 do
+    begin
+      Result.Add(TJson.JsonToObject<TAvailability>
+        (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
+    end;
+
+  end
+  else
+    raise Exception.Create(Format('Code: %s %s Message: %s',
+      [FResponse.StatusCode.ToString, FResponse.StatusText,
+      FResponse.JSONText]));
+end;
+
+function TiFood.Merchants: TObjectList<TMerchant>;
 var
   I: Integer;
 begin
@@ -92,12 +134,99 @@ begin
 
     for I := 0 to (FResponse.JSONValue as TJSONArray).Count - 1 do
     begin
-      Result.Add(TJson.JsonToObject<TMerchant>(((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
+      Result.Add(TJson.JsonToObject<TMerchant>
+        (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
     end;
 
   end
   else
-    raise Exception.Create(Format('Code: %s %s Message: %s', [FResponse.StatusCode.ToString, FResponse.StatusText, FResponse.JSONText]));
+    raise Exception.Create(Format('Code: %s %s Message: %s',
+      [FResponse.StatusCode.ToString, FResponse.StatusText,
+      FResponse.JSONText]));
+end;
+
+function TiFood.Unavailabilities(AMerchantUUID: String): TUnavailability;
+var
+  I: Integer;
+begin
+  Result := TUnavailability.Create;
+  FRequest.Method := rmGET;
+  FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities:now',
+    [AMerchantUUID]);
+
+  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+  FRequest.Execute;
+  FRequest.Params.Clear;
+
+  if FResponse.Status.Success then
+  begin
+
+    for I := 0 to (FResponse.JSONValue as TJSONArray).Count - 1 do
+    begin
+      Result := TJson.JsonToObject<TUnavailability>
+        (FResponse.JSONValue as TJSONObject);
+    end;
+
+  end
+  else
+    raise Exception.Create(Format('Code: %s %s Message: %s',
+      [FResponse.StatusCode.ToString, FResponse.StatusText,
+      FResponse.JSONText]));
+
+end;
+
+function TiFood.Unavailabilities(AMerchantUUID, AUnavailabilityId
+  : String): Boolean;
+var
+  I: Integer;
+begin
+  FRequest.Method := rmDELETE;
+  FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities/%s',
+    [AMerchantUUID, AUnavailabilityId]);
+
+  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+  FRequest.Execute;
+  FRequest.Params.Clear;
+
+  if FResponse.Status.Success then
+  begin
+    Result := True;
+  end
+  else
+    raise Exception.Create(Format('Code: %s %s Message: %s',
+      [FResponse.StatusCode.ToString, FResponse.StatusText,
+      FResponse.JSONText]));
+end;
+
+function TiFood.Unavailabilities(AMerchantUUID: String)
+  : TObjectList<TUnavailability>;
+var
+  I: Integer;
+begin
+  Result := TObjectList<TUnavailability>.Create;
+  FRequest.Method := rmGET;
+  FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities',
+    [AMerchantUUID]);
+
+  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+  FRequest.Execute;
+  FRequest.Params.Clear;
+
+  if FResponse.Status.Success then
+  begin
+
+    for I := 0 to (FResponse.JSONValue as TJSONArray).Count - 1 do
+    begin
+      Result.Add(TJson.JsonToObject<TUnavailability>
+        (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
+    end;
+
+  end
+  else
+    raise Exception.Create(Format('Code: %s %s Message: %s',
+      [FResponse.StatusCode.ToString, FResponse.StatusText,
+      FResponse.JSONText]));
+
 end;
 
 end.
