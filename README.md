@@ -20,12 +20,12 @@
 
 # Developer :construction:
 - [x] Authentication [POST]
-- [ ] Merchant and Merchant V2
+- [x] Merchant and Merchant V2
   - [x] Merchants
-  - [ ] Unavailabilities [GET]
-  - [ ] Unavailabilities [DELETE]
-  - [ ] Unavailabilities:now [POST]
-  - [ ] Merchant Availability [GET]
+  - [x] Unavailabilities [GET]
+  - [x] Unavailabilities [DELETE]
+  - [x] Unavailabilities:now [POST]
+  - [x] Merchant Availability [GET]
 - [ ] Order
   - [ ] Polling [GET]
   - [ ] Acknowledgment [POST]
