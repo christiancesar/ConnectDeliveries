@@ -1,10 +1,10 @@
-unit uClassBaseDelivery;
+unit uBaseDelivery;
 
 interface
 uses
   REST.Client, REST.Types;
 Type
-  TClassBaseDelivery = class(TObject)
+  TBaseDelivery = class(TObject)
   private
 
   protected

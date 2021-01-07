@@ -8,7 +8,7 @@ uses
   uiFood.Availability, uiFood.Polling, System.Classes;
 
 Type
-  TiFood = class(TClassBaseDelivery)
+  TiFood = class(TBaseDelivery)
   private
     { private declarations }
   protected
