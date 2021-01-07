@@ -28,12 +28,12 @@ uses
 
 { TClassBaseDelivery }
 
-procedure TClassBaseDelivery.addHeader(AName, AValue: String);
+procedure TBaseDelivery.addHeader(AName, AValue: String);
 begin
   FRequest.Params.AddHeader(AName, AValue);
 end;
 
-constructor TClassBaseDelivery.Create(const ABaseUrl: String);
+constructor TBaseDelivery.Create(const ABaseUrl: String);
 begin
   if ABaseUrl.IsEmpty then
     raise Exception.Create('Url base não pode ser vazia!');
@@ -46,7 +46,7 @@ begin
   FRequest.Response := FResponse;
 end;
 
-destructor TClassBaseDelivery.Destroy;
+destructor TBaseDelivery.Destroy;
 begin
   FreeAndNil(FClient);
   FreeAndNil(FRequest);
