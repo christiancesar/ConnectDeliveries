@@ -24,7 +24,7 @@ Type
       : TObjectList<TUnavailability>; Overload;
     function Unavailabilities(AMerchantUUID, AUnavailabilityId: String)
       : Boolean; Overload;
-    function Unavailabilities(AMerchantUUID: String): TUnavailability; Overload;
+    function Unavailabilities(AMerchantUUID, ADescription: String; AMinutes: Integer): TUnavailability; Overload;
 
     { Merchant v2 }
     function MerchantAvailability(AMerchantUUID: String)
@@ -145,16 +145,24 @@ begin
       FResponse.JSONText]));
 end;
 
-function TiFood.Unavailabilities(AMerchantUUID: String): TUnavailability;
+function TiFood.Unavailabilities(AMerchantUUID, ADescription: String; AMinutes: Integer): TUnavailability;
 var
   I: Integer;
+  joUnavailability: TJSONObject;
 begin
+  {Cria Objeto Json}
+  joUnavailability := TJSONObject.Create;
+  joUnavailability.AddPair('description', TJSONString(ADescription));
+  joUnavailability.AddPair('minutes', TJSONNumber.Create(AMinutes));
+
+
   Result := TUnavailability.Create;
   FRequest.Method := rmGET;
   FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities:now',
     [AMerchantUUID]);
 
   FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+  FRequest.Params.AddBody(joUnavailability);
   FRequest.Execute;
   FRequest.Params.Clear;
 

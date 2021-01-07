@@ -40,7 +40,7 @@ implementation
 constructor TAvailability.Create;
 begin
   Fvalidations := TObjectList<TValidation>.Create;
-  Freopenable := TReopenable;
+  Freopenable := TReopenable.Create;
   Fmessage := TMessage.Create;
 end;
 
