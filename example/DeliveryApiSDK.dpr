@@ -14,7 +14,8 @@ uses
   uiFood.Availability in '..\src\ifood\parseClasses\uiFood.Availability.pas',
   uiFood.Validation in '..\src\ifood\parseClasses\uiFood.Validation.pas',
   uiFood.Reopenable in '..\src\ifood\parseClasses\uiFood.Reopenable.pas',
-  uiFood.Message in '..\src\ifood\parseClasses\uiFood.Message.pas';
+  uiFood.Message in '..\src\ifood\parseClasses\uiFood.Message.pas',
+  uiFood.Polling in '..\src\ifood\parseClasses\uiFood.Polling.pas';
 
 {$R *.res}
 
