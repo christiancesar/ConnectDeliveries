@@ -7,11 +7,14 @@
   
   Passo 1: Baixe o repositorio
   ```bash
-  $ https://github.com/christiancesar/SDKDeliveryApis.git 
+  $ https://github.com/christiancesar/ConnectDeliveries.git 
   ```
   Passo 2: Aponte no seu LibraryPath as Units `\.src\`
   
   Passo 3: Pronto!
+
+  ### **Para auxiliar em seu projeto e ajudar a entender nosso sdk, execute o projeto ConnectDeliveries.dproj**
+
 
 # Tools :hammer_and_pick:
   

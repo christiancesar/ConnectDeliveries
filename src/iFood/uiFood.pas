@@ -16,6 +16,7 @@ Type
     { protected declarations }
   public
     { Authentication }
+
     /// <summary>
     /// Emite um token de acesso para comunicação de todos os endpoints, necessário em todas as chamadas da API.
     /// </summary>

@@ -1,4 +1,4 @@
-program DeliveryApiSDK;
+program ConnectDeliveries;
 
 uses
   Vcl.Forms,
