@@ -37,6 +37,8 @@ type
     procedure btnGetTokenClick(Sender: TObject);
     procedure btnMerchantsClick(Sender: TObject);
     procedure btnGetUnavailabilitiesClick(Sender: TObject);
+    procedure btnDeleteUnavailabilitiesClick(Sender: TObject);
+    procedure btnPostUnavailabilitiesClick(Sender: TObject);
   private
     FCredential: TCredential;
     FMerchants: TObjectList<TMerchant>;
@@ -97,6 +99,40 @@ begin
   Memo1.Lines.Add('');
 end;
 
+procedure TFormMain.btnDeleteUnavailabilitiesClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bDelete: Boolean;
+  oUnavailability: TUnavailability;
+begin
+  if FUnavailabilities.Count = 0 then
+    Log('Não existem indisponibilidades para serem removidas!');
+  oUnavailability := TUnavailability.Create;
+  try
+    try
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
+        CONTENTTYPE_APPLICATION_JSON);
+      oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+
+      for oUnavailability in FUnavailabilities do
+      begin
+        Log(oIfood.Unavailabilities(FMerchants.Items[cbRestaurant.ItemIndex].id,
+          oUnavailability.id, bDelete).Format);
+
+        if bDelete then
+          Log(Format('Indisponibilidades %s removida.', [oUnavailability.id]));
+      end;
+
+    except
+      on E: Exception do
+    end;
+  finally
+    FreeAndNil(oIfood);
+    FreeAndNil(oUnavailability);
+  end;
+
+end;
+
 procedure TFormMain.btnGetTokenClick(Sender: TObject);
 var
   oIfood: Tifood;
@@ -126,8 +162,8 @@ begin
       oIfood := Tifood.Create('https://pos-api.ifood.com.br',
         CONTENTTYPE_APPLICATION_JSON);
       oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
-      log(oIfood.Unavailabilities
-        (FMerchants.Items[cbRestaurant.ItemIndex].id, FUnavailabilities).Format);
+      Log(oIfood.Unavailabilities(FMerchants.Items[cbRestaurant.ItemIndex].id,
+        FUnavailabilities).Format);
       if Assigned(FUnavailabilities) then
         Log('Não foram encontradas indisponibilidades.');
 
@@ -163,6 +199,9 @@ begin
         cbRestaurant.Items.Add(oMerchant.name);
       end;
 
+      if cbRestaurant.Items.Count >= 0 then
+        cbRestaurant.ItemIndex := 0;
+
       Log(Format
         ('Foram encontrados %d restaurante(s) cadastrados com essas credenciais!',
         [FMerchants.Count]));
@@ -173,6 +212,36 @@ begin
     FreeAndNil(oIfood);
     // FreeAndNil(oMerchant);
   end;
+end;
+
+procedure TFormMain.btnPostUnavailabilitiesClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  sDescricao: String;
+  iMinuto: Integer;
+  oUnavailability: TUnavailability;
+begin
+
+  oUnavailability := TUnavailability.Create;
+  try
+    sDescricao := 'Erro na internet';
+    iMinuto := 30;
+    try
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
+        CONTENTTYPE_APPLICATION_JSON);
+      oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+
+      Log(oIfood.Unavailabilities(FMerchants.Items[cbRestaurant.ItemIndex].id,
+        sDescricao, iMinuto, oUnavailability).Format);
+
+    except
+      on E: Exception do
+    end;
+  finally
+    FreeAndNil(oIfood);
+    FreeAndNil(oUnavailability);
+  end;
+
 end;
 
 end.

@@ -13,6 +13,7 @@ Type
   private
     { private declarations }
   protected
+    function ReturnMessage: TJSONValue;
     { protected declarations }
   public
     { Authentication }
@@ -23,7 +24,6 @@ Type
     function Authentication(const Credential: TCredential;
       out OAuthentication: TAuthentication): TJSONValue;
 
-
     { Merchant v1 }
 
     /// <summary>
@@ -31,24 +31,23 @@ Type
     /// </summary>
     function Merchants(out AMerchant: TObjectList<TMerchant>): TJSONValue;
 
-
     /// <summary>
-    ///  Lista todas as indisponibilidades cadastradas para um merchant.
-    ///  Consulte as indisponibilidades e obtenha o id da indisponibilidade
-    ///  para removê-la
+    /// Lista todas as indisponibilidades cadastradas para um merchant.
+    /// Consulte as indisponibilidades e obtenha o id da indisponibilidade
+    /// para removê-la
     /// </summary>
     function Unavailabilities(AMerchantUUID: String;
-      out AUnavailabilities: TObjectList<TUnavailability>)
-      : TJSONValue; Overload;
+      out AUnavailabilities: TObjectList<TUnavailability>): TJSONValue;
+      Overload;
 
     /// <summary>
-    ///  Remove indisponibilidades cadastradas
+    /// Remove indisponibilidades cadastradas
     /// </summary>
     function Unavailabilities(AMerchantUUID, AUnavailabilityId: String;
       out ADelete: Boolean): TJSONValue; Overload;
 
     /// <summary>
-    ///  Cadastra uma indisponibilidade para o merchant.
+    /// Cadastra uma indisponibilidade para o merchant.
     /// </summary>
     function Unavailabilities(AMerchantUUID, ADescription: String;
       AMinutes: Integer; AUnavailability: TUnavailability): TJSONValue;
@@ -56,7 +55,7 @@ Type
 
     { Merchant v2 }
     /// <summary>
-    ///  Retorna o status do merchant na plataforma
+    /// Retorna o status do merchant na plataforma
     /// </summary>
     function MerchantAvailability(AMerchantUUID: String;
       AAvailabilities: TObjectList<TAvailability>): TJSONValue;
@@ -151,8 +150,7 @@ begin
       (FResponse.JSONValue as TJSONObject);
   end;
 
-  Result := TReturnMessage.Create(FResponse.Status.Success, FResponse.JSONText,
-    FResponse.StatusCode, FResponse.StatusText).AsJson;
+  Result := ReturnMessage;
 
 end;
 
@@ -191,11 +189,9 @@ begin
         (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
     end;
 
-  end
-  else
-    raise Exception.Create(Format('Code: %s %s Message: %s',
-      [FResponse.StatusCode.ToString, FResponse.StatusText,
-      FResponse.JSONText]));
+  end;
+
+  Result := ReturnMessage;
 end;
 
 function TiFood.Merchants(out AMerchant: TObjectList<TMerchant>): TJSONValue;
@@ -217,11 +213,10 @@ begin
         (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
     end;
 
-  end
-  else
-    raise Exception.Create(Format('Code: %s %s Message: %s',
-      [FResponse.StatusCode.ToString, FResponse.StatusText,
-      FResponse.JSONText]));
+  end;
+
+  Result := ReturnMessage;
+
 end;
 
 function TiFood.Polling: TObjectList<TPolling>;
@@ -252,23 +247,33 @@ begin
 
 end;
 
+function TiFood.ReturnMessage: TJSONValue;
+begin
+  Result := TReturnMessage.Create(FResponse.Status.Success, FResponse.JSONText,
+    FResponse.StatusCode, FResponse.StatusText).AsJson;
+end;
+
 function TiFood.Unavailabilities(AMerchantUUID, ADescription: String;
   AMinutes: Integer; AUnavailability: TUnavailability): TJSONValue;
 var
   joUnavailability: TJSONObject;
+  jvUnavailability: TJSONValue;
 begin
   { Cria Objeto Json }
   joUnavailability := TJSONObject.Create;
+  jvUnavailability := TJSONValue.Create;
+
   try
     joUnavailability.AddPair('description', TJSONString(ADescription));
     joUnavailability.AddPair('minutes', TJSONNumber.Create(AMinutes));
 
+    jvUnavailability := joUnavailability as TjsonValue;
     FRequest.Method := rmPOST;
     FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities:now',
       [AMerchantUUID]);
 
     FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
-    FRequest.Params.AddBody(joUnavailability);
+    FRequest.Params.AddBody(joUnavailability.ToJSON, ctAPPLICATION_JSON);
     FRequest.Execute;
     FRequest.Params.Clear;
 
@@ -276,11 +281,9 @@ begin
     begin
       AUnavailability := TJson.JsonToObject<TUnavailability>
         (FResponse.JSONValue as TJSONObject);
-    end
-    else
-      raise Exception.Create(Format('Code: %s %s Message: %s',
-        [FResponse.StatusCode.ToString, FResponse.StatusText,
-        FResponse.JSONText]));
+    end;
+
+    Result := ReturnMessage;
 
   finally
     FreeAndNil(joUnavailability);
@@ -302,14 +305,9 @@ begin
   FRequest.Execute;
   FRequest.Params.Clear;
 
-  if FResponse.Status.Success then
-  begin
-    ADelete := True;
-  end
-  else
-    raise Exception.Create(Format('Code: %s %s Message: %s',
-      [FResponse.StatusCode.ToString, FResponse.StatusText,
-      FResponse.JSONText]));
+  ADelete := FResponse.Status.Success;
+
+  Result := ReturnMessage;
 end;
 
 function TiFood.Unavailabilities(AMerchantUUID: String;
@@ -333,11 +331,9 @@ begin
         (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
     end;
 
-  end
-  else
-    raise Exception.Create(Format('Code: %s %s Message: %s',
-      [FResponse.StatusCode.ToString, FResponse.StatusText,
-      FResponse.JSONText]));
+  end;
+
+  Result := ReturnMessage;
 end;
 
 end.

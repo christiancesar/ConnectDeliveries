@@ -34,11 +34,8 @@ object FormMain: TFormMain
         Width = 1085
         Height = 818
         Align = alClient
+        ScrollBars = ssVertical
         TabOrder = 0
-        ExplicitLeft = 200
-        ExplicitTop = 0
-        ExplicitWidth = 1126
-        ExplicitHeight = 861
       end
       object SplitView1: TSplitView
         Left = 0
@@ -108,7 +105,7 @@ object FormMain: TFormMain
           Height = 25
           Align = alTop
           Caption = 'Unavailabilities [POST]'
-          OnClick = btnMerchantsClick
+          OnClick = btnPostUnavailabilitiesClick
           ExplicitLeft = -16
           ExplicitTop = 106
           ExplicitWidth = 200
@@ -120,7 +117,7 @@ object FormMain: TFormMain
           Height = 25
           Align = alTop
           Caption = 'Unavailabilities [DELETE]'
-          OnClick = btnMerchantsClick
+          OnClick = btnDeleteUnavailabilitiesClick
           ExplicitLeft = -16
           ExplicitTop = 106
           ExplicitWidth = 200
