@@ -13,8 +13,11 @@
   
   Passo 3: Pronto!
 
-  ### **Para auxiliar em seu projeto e ajudar a entender nosso sdk, execute o projeto ConnectDeliveries.dproj**
 
+# Run
+  
+  ### **Para auxiliar em seu projeto e ajudar a entender nosso sdk, execute o projeto ConnectDeliveries.dproj**
+  Renomear o arquivo `.env copy.json` > `.env.json`. O projeto exemplo usa as credenciais que forem incluidas neste documento.  
 
 # Tools :hammer_and_pick:
   
