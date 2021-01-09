@@ -52,7 +52,7 @@
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
-        <Custom_Styles>&quot;Metropolis UI Dark|VCLSTYLE|$(PUBLIC)\Documents\Embarcadero\Studio\20.0\Styles\MetropolisUIDark.vsf&quot;</Custom_Styles>
+        <Custom_Styles>&quot;Metropolis UI Dark|VCLSTYLE|$(BDSCOMMONDIR)\Styles\MetropolisUIDark.vsf&quot;</Custom_Styles>
         <SanitizedProjectName>DeliveryApiSDK</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -106,7 +106,7 @@
             <Form>FormMain</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\src\Common\uClassBaseDelivery.pas"/>
+        <DCCReference Include="..\src\Common\uBaseDelivery.pas"/>
         <DCCReference Include="..\src\iFood\ParseClasses\uiFood.Authentication.pas"/>
         <DCCReference Include="..\src\iFood\ParseClasses\uiFood.Credential.pas"/>
         <DCCReference Include="..\src\iFood\ParseClasses\uiFood.Merchant.pas"/>
@@ -117,6 +117,10 @@
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.Reopenable.pas"/>
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.Message.pas"/>
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.Polling.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Payment.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Address.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.MerchantDetail.pas"/>
+        <DCCReference Include="..\src\common\uReturnMessage.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

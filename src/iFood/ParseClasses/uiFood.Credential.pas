@@ -9,10 +9,12 @@ Type
     Fpassword: String;
     Fgrant_type: String;
     Fusername: String;
+    FbaseURL: String;
 
   protected
 
   public
+    property baseURL: String read FbaseURL write FbaseURL;
     property client_id: String read Fclient_id write Fclient_id;
     property client_secret: String read Fclient_secret write Fclient_secret;
     property grant_type: String read Fgrant_type write Fgrant_type;

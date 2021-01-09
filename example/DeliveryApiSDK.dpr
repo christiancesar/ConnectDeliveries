@@ -5,7 +5,7 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   uFormMain in 'uFormMain.pas' {FormMain},
-  uClassBaseDelivery in '..\src\Common\uClassBaseDelivery.pas',
+  uBaseDelivery in '..\src\Common\uBaseDelivery.pas',
   uiFood.Authentication in '..\src\iFood\ParseClasses\uiFood.Authentication.pas',
   uiFood.Credential in '..\src\iFood\ParseClasses\uiFood.Credential.pas',
   uiFood.Merchant in '..\src\iFood\ParseClasses\uiFood.Merchant.pas',
@@ -15,14 +15,17 @@ uses
   uiFood.Validation in '..\src\ifood\parseClasses\uiFood.Validation.pas',
   uiFood.Reopenable in '..\src\ifood\parseClasses\uiFood.Reopenable.pas',
   uiFood.Message in '..\src\ifood\parseClasses\uiFood.Message.pas',
-  uiFood.Polling in '..\src\ifood\parseClasses\uiFood.Polling.pas';
+  uiFood.Polling in '..\src\ifood\parseClasses\uiFood.Polling.pas',
+  uiFood.Payment in '..\src\ifood\parseClasses\uiFood.Payment.pas',
+  uiFood.Address in '..\src\ifood\parseClasses\uiFood.Address.pas',
+  uiFood.MerchantDetail in '..\src\ifood\parseClasses\uiFood.MerchantDetail.pas',
+  uReturnMessage in '..\src\common\uReturnMessage.pas';
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.UseMetropolisUI;
-  TStyleManager.TrySetStyle('Metropolis UI Dark');
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Metropolis UI Application';
   Application.CreateForm(TFormMain, FormMain);
