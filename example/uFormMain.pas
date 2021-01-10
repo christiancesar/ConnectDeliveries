@@ -8,8 +8,8 @@ uses
   Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Imaging.pngimage, System.Actions,
   Vcl.ActnList, REST.Types, Vcl.Buttons, REST.Client, uIfood.Credential,
   Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.WinXPanels, System.Generics.Collections,
-  uIfood, uIfood.Authentication, uIfood.Merchant, uIfood.Unavailability;
-
+  uIfood, uIfood.Authentication, uIfood.Merchant, uIfood.Unavailability,
+  uiFood.Availability;
 type
   TFormMain = class(TForm)
     Memo1: TMemo;
@@ -30,6 +30,7 @@ type
     Panel1: TPanel;
     cbRestaurant: TComboBox;
     SpeedButton1: TSpeedButton;
+    tsStatus: TToggleSwitch;
     procedure FormCreate(Sender: TObject);
 
     procedure CloseButtonClick(Sender: TObject);
@@ -39,6 +40,7 @@ type
     procedure btnGetUnavailabilitiesClick(Sender: TObject);
     procedure btnDeleteUnavailabilitiesClick(Sender: TObject);
     procedure btnPostUnavailabilitiesClick(Sender: TObject);
+    procedure btnMerchantAvailabilityClick(Sender: TObject);
   private
     FCredential: TCredential;
     FMerchants: TObjectList<TMerchant>;
@@ -46,6 +48,7 @@ type
     FUnavailabilities: TObjectList<TUnavailability>;
 
     procedure Log(AString: String);
+    procedure SetStatusRestaurant(Availabilities: TObjectList<TAvailability>);
     { Private declarations }
   public
     { Public declarations }
@@ -97,6 +100,30 @@ procedure TFormMain.Log(AString: String);
 begin
   Memo1.Lines.Add(AString);
   Memo1.Lines.Add('');
+end;
+
+procedure TFormMain.SetStatusRestaurant(Availabilities: TObjectList<TAvailability>);
+var
+  oAvailability: TAvailability;
+begin
+  oAvailability := TAvailability.Create;
+  for oAvailability in Availabilities do
+  begin
+    Log(oAvailability.message.title);
+
+    if oAvailability.available then
+    begin
+     tsStatus.FrameColor := clGreen;
+     tsStatus.ThumbColor := clGreen;
+     tsStatus.State := tssOn;
+    end
+    else
+    begin
+     tsStatus.FrameColor := clRed;
+     tsStatus.ThumbColor := clRed;
+     tsStatus.State := tssOff;
+    end;
+  end;
 end;
 
 procedure TFormMain.btnDeleteUnavailabilitiesClick(Sender: TObject);
@@ -179,6 +206,33 @@ end;
 procedure TFormMain.btnClearClick(Sender: TObject);
 begin
   Memo1.Lines.Clear;
+end;
+
+procedure TFormMain.btnMerchantAvailabilityClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  oAvailabilities: TObjectList<TAvailability>;
+  oAvailability: TAvailability;
+  name: String;
+begin
+  try
+    oAvailabilities := TObjectList<TAvailability>.Create;
+    try
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
+        CONTENTTYPE_APPLICATION_JSON);
+      oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+      Log(oIfood.MerchantAvailability(FMerchants.Items[cbRestaurant.ItemIndex].id, oAvailabilities).Format);
+
+      SetStatusRestaurant(oAvailabilities);
+
+    except
+      on E: Exception do
+    end;
+  finally
+    FreeAndNil(oIfood);
+    FreeAndNil(oAvailabilities);
+    FreeAndNil(oAvailability);
+  end;
 end;
 
 procedure TFormMain.btnMerchantsClick(Sender: TObject);

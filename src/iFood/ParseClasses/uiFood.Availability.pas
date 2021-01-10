@@ -10,7 +10,7 @@ Type
 
   TAvailability = class(TObject)
   private
-    Fvalidations: TObjectList<TValidation>;
+    Fvalidations: TArray<TValidation>;
     Fmessage: TMessage;
     Fcontext: String;
     Fstate: String;
@@ -22,8 +22,8 @@ Type
     property context: String read Fcontext write Fcontext;
     property available: Boolean read Favailable write Favailable;
     property state: String read Fstate write Fstate;
-    property Reopenable: TReopenable read Freopenable write Freopenable;
-    property validations: TObjectList<TValidation> read Fvalidations
+    property reopenable: TReopenable read Freopenable write Freopenable;
+    property validations: TArray<TValidation> read Fvalidations
       write Fvalidations;
     property message: TMessage read Fmessage write Fmessage;
 
@@ -39,7 +39,7 @@ implementation
 
 constructor TAvailability.Create;
 begin
-  Fvalidations := TObjectList<TValidation>.Create;
+  Fvalidations := TArray<TValidation>.Create();
   Freopenable := TReopenable.Create;
   Fmessage := TMessage.Create;
 end;

@@ -27,6 +27,8 @@ Type
 
   end;
 
+  TArrayValidations = array of TValidation;
+
 implementation
 
 { TValidation }

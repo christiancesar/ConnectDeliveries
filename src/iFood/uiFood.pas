@@ -58,7 +58,7 @@ Type
     /// Retorna o status do merchant na plataforma
     /// </summary>
     function MerchantAvailability(AMerchantUUID: String;
-      AAvailabilities: TObjectList<TAvailability>): TJSONValue;
+      out AAvailabilities: TObjectList<TAvailability>): TJSONValue;
 
     { Orders }
 
@@ -169,24 +169,30 @@ begin
 end;
 
 function TiFood.MerchantAvailability(AMerchantUUID: String;
-  AAvailabilities: TObjectList<TAvailability>): TJSONValue;
+  out AAvailabilities: TObjectList<TAvailability>): TJSONValue;
 var
   I: Integer;
+  jaArray: TJSONArray;
+  joArray: TJSONObject;
 begin
   FRequest.Method := rmGET;
-  FRequest.Resource := Format('/v2.0/merchants/%s/availabilities',
+  FRequest.Resource := Format('/merchant/v2.0/merchants/%s/availabilities',
     [AMerchantUUID]);
   FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
   FRequest.Execute;
   FRequest.Params.Clear;
 
+
   if FResponse.Status.Success then
   begin
+    jaArray := TJSONArray.Create;
+    jaArray := (FResponse.JSONValue as TJSONArray);
 
-    for I := 0 to (FResponse.JSONValue as TJSONArray).Count - 1 do
+    for I := 0 to jaArray.Count - 1 do
     begin
-      AAvailabilities.Add(TJson.JsonToObject<TAvailability>
-        (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
+      joArray.CleanupInstance;
+      joArray := (jaArray.Items[I] as TJSONObject);
+      AAvailabilities.Add(TJson.JsonToObject<TAvailability>(joArray));
     end;
 
   end;
@@ -267,7 +273,7 @@ begin
     joUnavailability.AddPair('description', TJSONString(ADescription));
     joUnavailability.AddPair('minutes', TJSONNumber.Create(AMinutes));
 
-    jvUnavailability := joUnavailability as TjsonValue;
+    jvUnavailability := (joUnavailability as TJSONValue);
     FRequest.Method := rmPOST;
     FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities:now',
       [AMerchantUUID]);
