@@ -53,7 +53,7 @@ end;
 
 destructor TItem.Destroy;
 begin
-  FreeAndNil(FsubItems);
+    Finalize(FsubItems);
   inherited;
 end;
 

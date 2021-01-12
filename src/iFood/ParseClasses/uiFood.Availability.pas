@@ -46,7 +46,7 @@ end;
 
 destructor TAvailability.Destroy;
 begin
-  FreeAndNil(Fvalidations);
+  Finalize(Fvalidations);
   FreeAndNil(Freopenable);
   FreeAndNil(Fmessage);
   inherited;

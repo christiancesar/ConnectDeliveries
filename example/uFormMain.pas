@@ -29,8 +29,18 @@ type
     btnMerchantAvailability: TSpeedButton;
     Panel1: TPanel;
     cbRestaurant: TComboBox;
-    SpeedButton1: TSpeedButton;
     tsStatus: TToggleSwitch;
+    btnPolling: TSpeedButton;
+    BtnAcknow: TSpeedButton;
+    btnDispatch: TSpeedButton;
+    btnConfirmation: TSpeedButton;
+    btnIntegration: TSpeedButton;
+    btnOrderDetail: TSpeedButton;
+    Label5: TLabel;
+    btnCancellationDenied: TSpeedButton;
+    btnCancellationRequest: TSpeedButton;
+    btnReadyDelivery: TSpeedButton;
+    btnCancellationAccepted: TSpeedButton;
     procedure FormCreate(Sender: TObject);
 
     procedure CloseButtonClick(Sender: TObject);

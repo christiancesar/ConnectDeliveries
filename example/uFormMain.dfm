@@ -29,18 +29,20 @@ object FormMain: TFormMain
     object TabSheet1: TTabSheet
       Caption = 'iFood'
       object Memo1: TMemo
-        Left = 200
+        Left = 217
         Top = 43
-        Width = 1126
+        Width = 1109
         Height = 818
         Align = alClient
         ScrollBars = ssVertical
         TabOrder = 0
+        ExplicitLeft = 232
+        ExplicitWidth = 1094
       end
       object SplitView1: TSplitView
         Left = 0
         Top = 43
-        Width = 200
+        Width = 217
         Height = 818
         OpenedWidth = 200
         Placement = svpLeft
@@ -48,27 +50,28 @@ object FormMain: TFormMain
         object btnGetToken: TSpeedButton
           Left = 0
           Top = 25
-          Width = 200
-          Height = 25
+          Width = 217
+          Height = 30
           Align = alTop
           Caption = 'GetToken'
           OnClick = btnGetTokenClick
-          ExplicitTop = 0
+          ExplicitWidth = 200
         end
         object btnClear: TSpeedButton
           Left = 0
-          Top = 793
-          Width = 200
-          Height = 25
+          Top = 788
+          Width = 217
+          Height = 30
           Align = alBottom
           Caption = 'Clear'
           OnClick = btnClearClick
-          ExplicitTop = 592
+          ExplicitTop = 793
+          ExplicitWidth = 200
         end
         object Label1: TLabel
           Left = 0
           Top = 0
-          Width = 200
+          Width = 217
           Height = 25
           Align = alTop
           Caption = 'Authentication'
@@ -76,87 +79,185 @@ object FormMain: TFormMain
         end
         object Label2: TLabel
           Left = 0
-          Top = 175
-          Width = 200
+          Top = 200
+          Width = 217
           Height = 25
           Align = alTop
           Caption = 'Merchant v2'
+          ExplicitTop = 175
           ExplicitWidth = 105
         end
         object btnMerchants: TSpeedButton
           Left = 0
-          Top = 75
-          Width = 200
-          Height = 25
+          Top = 80
+          Width = 217
+          Height = 30
           Align = alTop
           Caption = 'Merchants [GET]'
           OnClick = btnMerchantsClick
-          ExplicitTop = 69
+          ExplicitWidth = 200
         end
         object btnPostUnavailabilities: TSpeedButton
           Left = 0
-          Top = 150
-          Width = 200
-          Height = 25
+          Top = 170
+          Width = 217
+          Height = 30
           Align = alTop
           Caption = 'Unavailabilities [POST]'
           OnClick = btnPostUnavailabilitiesClick
-          ExplicitLeft = -16
-          ExplicitTop = 106
+          ExplicitWidth = 200
         end
         object btnDeleteUnavailabilities: TSpeedButton
           Left = 0
-          Top = 125
-          Width = 200
-          Height = 25
+          Top = 140
+          Width = 217
+          Height = 30
           Align = alTop
           Caption = 'Unavailabilities [DELETE]'
           OnClick = btnDeleteUnavailabilitiesClick
-          ExplicitLeft = -16
-          ExplicitTop = 106
+          ExplicitTop = 125
+          ExplicitWidth = 200
         end
         object btnGetUnavailabilities: TSpeedButton
           Left = 0
-          Top = 100
-          Width = 200
-          Height = 25
+          Top = 110
+          Width = 217
+          Height = 30
           Align = alTop
           Caption = 'Unavailabilities [GET]'
           OnClick = btnGetUnavailabilitiesClick
-          ExplicitLeft = -16
-          ExplicitTop = 106
+          ExplicitTop = 105
+          ExplicitWidth = 200
         end
         object Label3: TLabel
           Left = 0
-          Top = 50
-          Width = 200
+          Top = 55
+          Width = 217
           Height = 25
           Align = alTop
           Caption = 'Merchant v1'
+          ExplicitTop = 50
           ExplicitWidth = 105
         end
         object btnMerchantAvailability: TSpeedButton
           Left = 0
-          Top = 200
-          Width = 200
-          Height = 25
+          Top = 225
+          Width = 217
+          Height = 30
           Align = alTop
           Caption = 'Merchant Availability'
           OnClick = btnMerchantAvailabilityClick
-          ExplicitLeft = -6
-          ExplicitTop = 238
-          ExplicitWidth = 241
+          ExplicitTop = 215
+          ExplicitWidth = 200
         end
-        object SpeedButton1: TSpeedButton
+        object btnPolling: TSpeedButton
           Left = 0
-          Top = 225
-          Width = 200
+          Top = 280
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'Polling(Request in 30s)'
+          ExplicitTop = 275
+          ExplicitWidth = 200
+        end
+        object BtnAcknow: TSpeedButton
+          Left = 0
+          Top = 310
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'Acknowledgment'
+          ExplicitTop = 275
+          ExplicitWidth = 200
+        end
+        object btnDispatch: TSpeedButton
+          Left = 0
+          Top = 430
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'Dispatch'
+          ExplicitTop = 390
+          ExplicitWidth = 200
+        end
+        object btnConfirmation: TSpeedButton
+          Left = 0
+          Top = 400
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'Confirmation'
+          ExplicitTop = 355
+          ExplicitWidth = 200
+        end
+        object btnIntegration: TSpeedButton
+          Left = 0
+          Top = 370
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'Integration'
+          ExplicitTop = 345
+          ExplicitWidth = 200
+        end
+        object btnOrderDetail: TSpeedButton
+          Left = 0
+          Top = 340
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'OrderDetail'
+          ExplicitTop = 330
+          ExplicitWidth = 200
+        end
+        object Label5: TLabel
+          Left = 0
+          Top = 255
+          Width = 217
           Height = 25
           Align = alTop
-          Caption = 'ReturnMessage'
-          ExplicitLeft = -6
-          ExplicitTop = 272
-          ExplicitWidth = 241
+          Caption = 'Order v3'
+          ExplicitTop = 225
+          ExplicitWidth = 73
+        end
+        object btnCancellationDenied: TSpeedButton
+          Left = 0
+          Top = 550
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'CancellationDenied'
+          ExplicitTop = 485
+          ExplicitWidth = 200
+        end
+        object btnCancellationRequest: TSpeedButton
+          Left = 0
+          Top = 490
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'CancellationRequested'
+          ExplicitTop = 430
+          ExplicitWidth = 200
+        end
+        object btnReadyDelivery: TSpeedButton
+          Left = 0
+          Top = 460
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'ReadyToDelivery'
+          ExplicitWidth = 200
+        end
+        object btnCancellationAccepted: TSpeedButton
+          Left = 0
+          Top = 520
+          Width = 217
+          Height = 30
+          Align = alTop
+          Caption = 'CancellationAccepted'
+          ExplicitTop = 455
+          ExplicitWidth = 200
         end
       end
       object Panel1: TPanel
@@ -182,9 +283,9 @@ object FormMain: TFormMain
           Text = 'Selecione o restaurante'
         end
         object tsStatus: TToggleSwitch
-          Left = 1243
+          Left = 1232
           Top = 1
-          Width = 82
+          Width = 93
           Height = 41
           Align = alRight
           Color = clWhite
@@ -192,8 +293,6 @@ object FormMain: TFormMain
           ReadOnly = True
           TabOrder = 1
           ThumbColor = clHotLight
-          ExplicitLeft = 1204
-          ExplicitHeight = 27
         end
       end
     end

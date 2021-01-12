@@ -90,12 +90,13 @@ begin
   FdeliveryMethod := TDeliveryMethod.Create;
   Flocalizer := TLocalizer.Create;
   FreplacementOptions := TReplacementOptions.Create;
-  Fitems := TArray<TItem>.Create();
   FdeliveryAddress := TDeliveryAddress.Create;
   Fcustomer := TCustomer.Create;
+  FpickupAreaAssigned := TPickupAreaAssigned.Create;
+
+  Fitems := TArray<TItem>.Create();
   Ftags := TArray<String>.Create();
   Fbenefits := TArray<TBenefits>.Create();
-  FpickupAreaAssigned := TPickupAreaAssigned.Create;
   Fpayments := TArray<TPayment>.Create();
 
 end;
@@ -107,13 +108,14 @@ begin
   FreeAndNil(FdeliveryMethod);
   FreeAndNil(Flocalizer);
   FreeAndNil(FreplacementOptions);
-  FreeAndNil(Fitems);
   FreeAndNil(FdeliveryAddress);
   FreeAndNil(Fcustomer);
-  FreeAndNil(Ftags);
-  FreeAndNil(Fbenefits);
   FreeAndNil(FpickupAreaAssigned);
-  FreeAndNil(Fpayments);
+
+  Finalize(Ftags);
+  Finalize(Fbenefits);
+  Finalize(Fitems);
+  Finalize(Fpayments);
   inherited;
 end;
 
