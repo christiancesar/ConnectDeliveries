@@ -117,10 +117,23 @@
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.Reopenable.pas"/>
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.Message.pas"/>
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.Polling.pas"/>
-        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Payment.pas"/>
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.Address.pas"/>
         <DCCReference Include="..\src\ifood\parseClasses\uiFood.MerchantDetail.pas"/>
         <DCCReference Include="..\src\common\uReturnMessage.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.ReplacementOptions.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.OrderDetail.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.SubItem.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Item.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.PickupAreaAssigned.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.MetaData.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.DeliveryMethod.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.SponsorshipValues.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Benefits.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Localizer.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Coordinates.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.DeliveryAddress.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Customer.pas"/>
+        <DCCReference Include="..\src\ifood\parseClasses\uiFood.Payment.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

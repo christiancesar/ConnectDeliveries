@@ -36,7 +36,7 @@ end;
 
 destructor TMerchantDetail.Destroy;
 begin
-
+  FreeAndNil(Faddress);
   inherited;
 end;
 

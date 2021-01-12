@@ -48,7 +48,7 @@ type
     FUnavailabilities: TObjectList<TUnavailability>;
 
     procedure Log(AString: String);
-    procedure SetStatusRestaurant(Availabilities: TObjectList<TAvailability>);
+    procedure SetStatusRestaurant(AAvailabilities: TObjectList<TAvailability>);
     { Private declarations }
   public
     { Public declarations }
@@ -102,27 +102,31 @@ begin
   Memo1.Lines.Add('');
 end;
 
-procedure TFormMain.SetStatusRestaurant(Availabilities: TObjectList<TAvailability>);
+procedure TFormMain.SetStatusRestaurant(AAvailabilities: TObjectList<TAvailability>);
 var
   oAvailability: TAvailability;
 begin
   oAvailability := TAvailability.Create;
-  for oAvailability in Availabilities do
-  begin
-    Log(oAvailability.message.title);
+  try
+    for oAvailability in AAvailabilities do
+    begin
+      Log(oAvailability.message.title);
 
-    if oAvailability.available then
-    begin
-     tsStatus.FrameColor := clGreen;
-     tsStatus.ThumbColor := clGreen;
-     tsStatus.State := tssOn;
-    end
-    else
-    begin
-     tsStatus.FrameColor := clRed;
-     tsStatus.ThumbColor := clRed;
-     tsStatus.State := tssOff;
+      if oAvailability.available then
+      begin
+       tsStatus.FrameColor := clGreen;
+       tsStatus.ThumbColor := clGreen;
+       tsStatus.State := tssOn;
+      end
+      else
+      begin
+       tsStatus.FrameColor := clRed;
+       tsStatus.ThumbColor := clRed;
+       tsStatus.State := tssOff;
+      end;
     end;
+  finally
+//    FreeAndNil(oAvailability);
   end;
 end;
 
@@ -212,8 +216,6 @@ procedure TFormMain.btnMerchantAvailabilityClick(Sender: TObject);
 var
   oIfood: Tifood;
   oAvailabilities: TObjectList<TAvailability>;
-  oAvailability: TAvailability;
-  name: String;
 begin
   try
     oAvailabilities := TObjectList<TAvailability>.Create;
@@ -231,7 +233,6 @@ begin
   finally
     FreeAndNil(oIfood);
     FreeAndNil(oAvailabilities);
-    FreeAndNil(oAvailability);
   end;
 end;
 
