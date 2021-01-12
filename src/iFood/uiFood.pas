@@ -172,32 +172,36 @@ function TiFood.MerchantAvailability(AMerchantUUID: String;
   out AAvailabilities: TObjectList<TAvailability>): TJSONValue;
 var
   I: Integer;
-  jaArray: TJSONArray;
-  joArray: TJSONObject;
+  jaAvailabilities: TJSONArray;
+  joAvailability: TJSONObject;
 begin
-  FRequest.Method := rmGET;
-  FRequest.Resource := Format('/merchant/v2.0/merchants/%s/availabilities',
-    [AMerchantUUID]);
-  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
-  FRequest.Execute;
-  FRequest.Params.Clear;
+  try
+    FRequest.Method := rmGET;
+    FRequest.Resource := Format('/merchant/v2.0/merchants/%s/availabilities',
+      [AMerchantUUID]);
+    FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+    FRequest.Execute;
+    FRequest.Params.Clear;
 
-
-  if FResponse.Status.Success then
-  begin
-    jaArray := TJSONArray.Create;
-    jaArray := (FResponse.JSONValue as TJSONArray);
-
-    for I := 0 to jaArray.Count - 1 do
+    if FResponse.Status.Success then
     begin
-      joArray.CleanupInstance;
-      joArray := (jaArray.Items[I] as TJSONObject);
-      AAvailabilities.Add(TJson.JsonToObject<TAvailability>(joArray));
+      jaAvailabilities := TJSONArray.Create;
+      jaAvailabilities := (FResponse.JSONValue as TJSONArray);
+
+      for I := 0 to jaAvailabilities.Count - 1 do
+      begin
+        joAvailability.CleanupInstance;
+        joAvailability := (jaAvailabilities.Items[I] as TJSONObject);
+        AAvailabilities.Add(TJson.JsonToObject<TAvailability>(joAvailability));
+      end;
+
     end;
 
+    Result := ReturnMessage;
+  finally
+    FreeAndNil(jaAvailabilities);
+    FreeAndNil(joAvailability);
   end;
-
-  Result := ReturnMessage;
 end;
 
 function TiFood.Merchants(out AMerchant: TObjectList<TMerchant>): TJSONValue;
@@ -293,6 +297,7 @@ begin
 
   finally
     FreeAndNil(joUnavailability);
+    FreeAndNil(jvUnavailability);
   end;
 
 end;

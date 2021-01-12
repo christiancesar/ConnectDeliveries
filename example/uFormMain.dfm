@@ -16,6 +16,7 @@ object FormMain: TFormMain
   Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanInertia, igoParentPassthrough]
   WindowState = wsMaximized
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 25
   object PageControl1: TPageControl

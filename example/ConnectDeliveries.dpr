@@ -38,6 +38,7 @@ uses
 
 begin
   Application.Initialize;
+  ReportMemoryLeaksOnShutdown := (DebugHook <> 0);
   Application.UseMetropolisUI;
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Metropolis UI Application';

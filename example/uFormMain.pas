@@ -42,6 +42,7 @@ type
     btnReadyDelivery: TSpeedButton;
     btnCancellationAccepted: TSpeedButton;
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
 
     procedure CloseButtonClick(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
@@ -51,6 +52,7 @@ type
     procedure btnDeleteUnavailabilitiesClick(Sender: TObject);
     procedure btnPostUnavailabilitiesClick(Sender: TObject);
     procedure btnMerchantAvailabilityClick(Sender: TObject);
+
   private
     FCredential: TCredential;
     FMerchants: TObjectList<TMerchant>;
@@ -86,24 +88,39 @@ var
   joJson: TJSONObject;
   jvJson: TJsonValue;
 begin
-  sEnv := TStringStream.Create;
+
   try
-    sPath := ExtractFilePath(Application.ExeName);
-    sEnv.LoadFromFile(sPath + '\.env.json');
+    sEnv := TStringStream.Create;
+    joJson := TJSONObject.Create;
+    try
+      sPath := ExtractFilePath(Application.ExeName);
+      sEnv.LoadFromFile(sPath + '\.env.json');
 
-    { Convertendo o .env e procurando as credenciais de homologacao }
-    joJson := TJSONObject.ParseJSONValue(sEnv.DataString) as TJSONObject;
-    jvJson := joJson.FindValue('credenciais.ifood.homologacao');
-    FCredential := TCredential.Create;
-    FCredential := TJson.JsonToObject<TCredential>(jvJson as TJSONObject);
+      { Convertendo o .env e procurando as credenciais de homologacao }
+      joJson := TJSONObject.ParseJSONValue(sEnv.DataString) as TJSONObject;
+      jvJson := joJson.FindValue('credenciais.ifood.homologacao');
+      FCredential := TCredential.Create;
+      FCredential := TJson.JsonToObject<TCredential>(jvJson as TJSONObject);
 
-    FMerchants := TObjectList<TMerchant>.Create;
-    FAuth := TAuthentication.Create;
-    FUnavailabilities := TObjectList<TUnavailability>.Create;
-  except
-    on E: Exception do
-      raise Exception.Create(E.Message);
+      FMerchants := TObjectList<TMerchant>.Create;
+      FAuth := TAuthentication.Create;
+      FUnavailabilities := TObjectList<TUnavailability>.Create;
+    except
+      on E: Exception do
+        raise Exception.Create(E.Message);
+    end;
+  finally
+    FreeAndNil(sEnv);
+    FreeAndNil(joJson);
   end;
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FCredential);
+  FreeAndNil(FMerchants);
+  FreeAndNil(FAuth);
+  FreeAndNil(FUnavailabilities);
 end;
 
 procedure TFormMain.Log(AString: String);
@@ -136,7 +153,6 @@ begin
       end;
     end;
   finally
-//    FreeAndNil(oAvailability);
   end;
 end;
 
