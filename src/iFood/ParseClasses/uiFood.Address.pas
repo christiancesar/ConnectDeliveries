@@ -17,8 +17,6 @@ Type
     Fneighborhood: String;
     Fcity: String;
 
-  protected
-
   public
     property formattedAddress: String read FformattedAddress
       write FformattedAddress;
@@ -29,8 +27,6 @@ Type
     property streetName: String read FstreetName write FstreetName;
     property streetNumber: String read FstreetNumber write FstreetNumber;
     property postalCode: String read FpostalCode write FpostalCode;
-
-  published
 
   end;
 

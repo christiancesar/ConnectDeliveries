@@ -3,10 +3,10 @@ unit uiFood;
 interface
 
 uses
-  uiFood.Authentication, uiFood.Credential, uBaseDelivery, REST.Types,
-  uiFood.Merchant, System.Generics.Collections, uiFood.Unavailability,
-  uiFood.Availability, uiFood.Polling, System.Classes, System.SysUtils,
-  REST.Json, System.Json;
+  REST.Json, System.Json, REST.Types, System.Generics.Collections,
+  uiFood.Authentication, uiFood.Credential, uBaseDelivery, uiFood.Merchant,
+  uiFood.Unavailability, uiFood.Availability, uiFood.Polling, System.Classes,
+  System.SysUtils, uiFood.OrderDetail;
 
 Type
   TiFood = class(TBaseDelivery)
@@ -61,11 +61,31 @@ Type
       out AAvailabilities: TObjectList<TAvailability>): TJSONValue;
 
     { Orders }
+    /// <summary>
+    /// Receber novos pedidos: Obtém todos os eventos ainda não recebidos
+    /// </summary>
+    function Polling(out APolling: TObjectList<TPolling>): TJSONValue;
 
-    function Polling: TObjectList<TPolling>;
+    /// <summary>
+    /// Após o PDV/POS receber os eventos de pedido via polling, é necessário
+    /// que se faça o acknowledgement para o iFood saber que os eventos foram
+    /// recebidos e o e-PDV não precisa mais receber esses eventos nas próximas
+    /// requests de polling. A request de acknowledgment aceita uma lista de no
+    /// máximo 2000 ids de eventos. Faça uma request de acknowledgment para cada
+    /// request de polling com resultados.
+    /// </summary>
     function Acknowledgment(AIdProcess: TStrings): Boolean;
 
-    constructor Create(ABaseUrl, AContentType: String);
+    /// <summary>
+    /// Obtém os detalhes do pedido
+    /// </summary>
+    function OrderDetail(ACorrelationId: String; out AOrderDetail: TOrderDetail)
+      : TJSONValue;
+
+    function StatusOrder(ACorrelationId, AStatus: String; AAccepted: Boolean)
+      : TJSONValue;
+
+    constructor Create(ABaseUrl: String);
     destructor Destroy; override;
     { public declarations }
 
@@ -74,6 +94,15 @@ Type
     { published declarations }
 
   end;
+
+const
+  Integration = 'integration';
+  Conformation = 'confirmation';
+  Dispatchh = 'dispatch';
+  ReadyToDeliver = 'readyToDeliver';
+  CancellationRequested = 'cancellationRequested';
+  CancellationAccepted = 'consumerCancellationAccepted';
+  CancellationDenied = 'consumerCancellationDenied';
 
 implementation
 
@@ -126,8 +155,6 @@ end;
 
 function TiFood.Authentication(const Credential: TCredential;
   out OAuthentication: TAuthentication): TJSONValue;
-var
-  bSuccess: Boolean;
 begin
 
   if not Assigned(Credential) then
@@ -154,18 +181,42 @@ begin
 
 end;
 
-constructor TiFood.Create(ABaseUrl, AContentType: String);
+constructor TiFood.Create(ABaseUrl: String);
 begin
   inherited Create(ABaseUrl);
-  FClient.Accept := 'application/json';
-  FClient.AcceptCharset := 'utf-8';
-  FClient.ContentType := AContentType;
+  FRequest.Accept := CONTENTTYPE_APPLICATION_JSON;
 end;
 
 destructor TiFood.Destroy;
 begin
 
   inherited;
+end;
+
+function TiFood.StatusOrder(ACorrelationId, AStatus: String; AAccepted: Boolean)
+  : TJSONValue;
+var
+  sVersion: String;
+begin
+
+  if AStatus.Equals(Integration) or AStatus.Equals(Conformation) or AStatus.Equals(Dispatchh) then
+    sVersion := 'v1.0'
+  else if AStatus.Equals(ReadyToDeliver) or AStatus.Equals(CancellationAccepted) or
+    AStatus.Equals(CancellationDenied) then
+    sVersion := 'v2.0'
+  else
+    sVersion := 'v3.0';
+
+  FRequest.Method := rmPOST;
+  FRequest.Resource := Format('/%s/orders/%s/statuses/%s',
+    [sVersion, ACorrelationId, AStatus]);
+  FRequest.Execute;
+  FRequest.Params.Clear;
+
+  AAccepted := FResponse.Status.Success;
+
+  Result := ReturnMessage;
+
 end;
 
 function TiFood.MerchantAvailability(AMerchantUUID: String;
@@ -179,7 +230,6 @@ begin
     FRequest.Method := rmGET;
     FRequest.Resource := Format('/merchant/v2.0/merchants/%s/availabilities',
       [AMerchantUUID]);
-    FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
     FRequest.Execute;
     FRequest.Params.Clear;
 
@@ -200,7 +250,6 @@ begin
     Result := ReturnMessage;
   finally
     FreeAndNil(jaAvailabilities);
-    FreeAndNil(joAvailability);
   end;
 end;
 
@@ -210,7 +259,7 @@ var
 begin
   FRequest.Method := rmGET;
   FRequest.Resource := '/v1.0/merchants';
-  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+
   FRequest.Execute;
   FRequest.Params.Clear;
 
@@ -229,14 +278,33 @@ begin
 
 end;
 
-function TiFood.Polling: TObjectList<TPolling>;
+function TiFood.OrderDetail(ACorrelationId: String;
+  out AOrderDetail: TOrderDetail): TJSONValue;
 var
   I: Integer;
 begin
-  Result := TObjectList<TPolling>.Create;
+  FRequest.Method := rmGET;
+  FRequest.Resource := Format('/v3.0/orders/%s', [ACorrelationId]);
+
+  FRequest.Execute;
+  FRequest.Params.Clear;
+
+  if FResponse.Status.Success then
+  begin
+    AOrderDetail := TJson.JsonToObject<TOrderDetail>
+      (FResponse.JSONValue as TJSONObject);
+  end;
+
+  Result := ReturnMessage;
+end;
+
+function TiFood.Polling(out APolling: TObjectList<TPolling>): TJSONValue;
+var
+  I: Integer;
+begin
   FRequest.Method := rmGET;
   FRequest.Resource := '/v3.0/events:polling';
-  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
+
   FRequest.Execute;
   FRequest.Params.Clear;
 
@@ -245,15 +313,12 @@ begin
 
     for I := 0 to (FResponse.JSONValue as TJSONArray).Count - 1 do
     begin
-      Result.Add(TJson.JsonToObject<TPolling>
+      APolling.Add(TJson.JsonToObject<TPolling>
         (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
     end;
+  end;
 
-  end
-  else
-    raise Exception.Create(Format('Code: %s %s Message: %s',
-      [FResponse.StatusCode.ToString, FResponse.StatusText,
-      FResponse.JSONText]));
+  Result := ReturnMessage;
 
 end;
 
@@ -282,7 +347,6 @@ begin
     FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities:now',
       [AMerchantUUID]);
 
-    FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
     FRequest.Params.AddBody(joUnavailability.ToJSON, ctAPPLICATION_JSON);
     FRequest.Execute;
     FRequest.Params.Clear;
@@ -312,7 +376,6 @@ begin
   FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities/%s',
     [AMerchantUUID, AUnavailabilityId]);
 
-  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
   FRequest.Execute;
   FRequest.Params.Clear;
 
@@ -330,7 +393,6 @@ begin
   FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities',
     [AMerchantUUID]);
 
-  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
   FRequest.Execute;
   FRequest.Params.Clear;
 

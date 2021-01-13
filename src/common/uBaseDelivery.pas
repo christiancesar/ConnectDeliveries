@@ -31,6 +31,7 @@ uses
 procedure TBaseDelivery.addHeader(AName, AValue: String);
 begin
   FRequest.Params.AddHeader(AName, AValue);
+  FRequest.Params.ParameterByName('Authorization').Options := [poDoNotEncode];
 end;
 
 constructor TBaseDelivery.Create(const ABaseUrl: String);

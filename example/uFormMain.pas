@@ -9,7 +9,9 @@ uses
   Vcl.ActnList, REST.Types, Vcl.Buttons, REST.Client, uIfood.Credential,
   Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.WinXPanels, System.Generics.Collections,
   uIfood, uIfood.Authentication, uIfood.Merchant, uIfood.Unavailability,
-  uiFood.Availability;
+  uIfood.Availability, uIfood.Polling, Data.DB, Vcl.Grids, Vcl.DBGrids,
+  Datasnap.DBClient, uiFood.OrderDetail;
+
 type
   TFormMain = class(TForm)
     Memo1: TMemo;
@@ -27,7 +29,7 @@ type
     btnGetUnavailabilities: TSpeedButton;
     Label3: TLabel;
     btnMerchantAvailability: TSpeedButton;
-    Panel1: TPanel;
+    pHeader: TPanel;
     cbRestaurant: TComboBox;
     tsStatus: TToggleSwitch;
     btnPolling: TSpeedButton;
@@ -41,6 +43,17 @@ type
     btnCancellationRequest: TSpeedButton;
     btnReadyDelivery: TSpeedButton;
     btnCancellationAccepted: TSpeedButton;
+    ScrollBox1: TScrollBox;
+    pPrincipal: TPanel;
+    DBGrid1: TDBGrid;
+    pLog: TPanel;
+    dsPolling: TDataSource;
+    cdsPolling: TClientDataSet;
+    cdsPollingcode: TStringField;
+    cdsPollingcorrelationId: TStringField;
+    cdsPollingcreatedAt: TStringField;
+    cdsPollingid: TStringField;
+    SpeedButton1: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
 
@@ -52,7 +65,15 @@ type
     procedure btnDeleteUnavailabilitiesClick(Sender: TObject);
     procedure btnPostUnavailabilitiesClick(Sender: TObject);
     procedure btnMerchantAvailabilityClick(Sender: TObject);
-
+    procedure btnPollingClick(Sender: TObject);
+    procedure btnOrderDetailClick(Sender: TObject);
+    procedure btnIntegrationClick(Sender: TObject);
+    procedure btnConfirmationClick(Sender: TObject);
+    procedure btnDispatchClick(Sender: TObject);
+    procedure btnReadyDeliveryClick(Sender: TObject);
+    procedure btnCancellationRequestClick(Sender: TObject);
+    procedure btnCancellationDeniedClick(Sender: TObject);
+    procedure btnCancellationAcceptedClick(Sender: TObject);
   private
     FCredential: TCredential;
     FMerchants: TObjectList<TMerchant>;
@@ -68,7 +89,7 @@ type
 
 var
   FormMain: TFormMain;
-
+    
 implementation
 
 uses
@@ -129,30 +150,46 @@ begin
   Memo1.Lines.Add('');
 end;
 
-procedure TFormMain.SetStatusRestaurant(AAvailabilities: TObjectList<TAvailability>);
+procedure TFormMain.SetStatusRestaurant(AAvailabilities
+  : TObjectList<TAvailability>);
 var
   oAvailability: TAvailability;
 begin
-  oAvailability := TAvailability.Create;
-  try
-    for oAvailability in AAvailabilities do
-    begin
-      Log(oAvailability.message.title);
 
-      if oAvailability.available then
-      begin
-       tsStatus.FrameColor := clGreen;
-       tsStatus.ThumbColor := clGreen;
-       tsStatus.State := tssOn;
-      end
-      else
-      begin
-       tsStatus.FrameColor := clRed;
-       tsStatus.ThumbColor := clRed;
-       tsStatus.State := tssOff;
-      end;
+  for oAvailability in AAvailabilities do
+  begin
+    Log(oAvailability.Message.title);
+
+    if oAvailability.available then
+    begin
+      tsStatus.FrameColor := clGreen;
+      tsStatus.ThumbColor := clGreen;
+      tsStatus.State := tssOn;
+    end
+    else
+    begin
+      tsStatus.FrameColor := clRed;
+      tsStatus.ThumbColor := clRed;
+      tsStatus.State := tssOff;
     end;
+  end;
+
+end;
+
+procedure TFormMain.btnConfirmationClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bAccepted: Boolean;
+begin
+
+  try
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+    oIfood.StatusOrder(cdsPollingcorrelationId.AsString , Conformation, bAccepted);
+
+    Log(Format('Pedido %s foi %s', [cdsPollingcorrelationId.AsString, Conformation]));
   finally
+    FreeAndNil(oIfood);
   end;
 end;
 
@@ -167,8 +204,7 @@ begin
   oUnavailability := TUnavailability.Create;
   try
     try
-      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
-        CONTENTTYPE_APPLICATION_JSON);
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br');
       oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
 
       for oUnavailability in FUnavailabilities do
@@ -190,16 +226,32 @@ begin
 
 end;
 
+procedure TFormMain.btnDispatchClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bAccepted: Boolean;
+begin
+
+  try
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+    oIfood.StatusOrder(cdsPollingcorrelationId.AsString , Dispatchh, bAccepted);
+
+    Log(Format('Pedido %s foi %s', [cdsPollingcorrelationId.AsString, Dispatch]));
+  finally
+    FreeAndNil(oIfood);
+  end;
+end;
+
 procedure TFormMain.btnGetTokenClick(Sender: TObject);
 var
   oIfood: Tifood;
 begin
   try
     try
-      oIfood := Tifood.Create(FCredential.baseURL,
-        CONTENTTYPE_MULTIPART_FORM_DATA);
+      oIfood := Tifood.Create(FCredential.baseURL);
 
-      Log(oIfood.Authentication(FCredential, FAuth).Format);
+      oIfood.Authentication(FCredential, FAuth);
       Log('Token de acesso: ' + FAuth.access_token);
 
     except
@@ -216,11 +268,10 @@ var
 begin
   try
     try
-      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
-        CONTENTTYPE_APPLICATION_JSON);
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br');
       oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
-      Log(oIfood.Unavailabilities(FMerchants.Items[cbRestaurant.ItemIndex].id,
-        FUnavailabilities).Format);
+      oIfood.Unavailabilities(FMerchants.Items[cbRestaurant.ItemIndex].id,
+        FUnavailabilities);
       if Assigned(FUnavailabilities) then
         Log('Não foram encontradas indisponibilidades.');
 
@@ -231,6 +282,75 @@ begin
     FreeAndNil(oIfood);
   end;
 
+end;
+
+procedure TFormMain.btnIntegrationClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bAccepted: Boolean;
+begin
+
+  try
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+    oIfood.StatusOrder(cdsPollingcorrelationId.AsString , Integration, bAccepted);
+
+    Log(Format('Pedido %s foi %s', [cdsPollingcorrelationId.AsString, Integration]));
+  finally
+    FreeAndNil(oIfood);
+  end;
+
+end;
+
+procedure TFormMain.btnCancellationAcceptedClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bAccepted: Boolean;
+begin
+
+  try
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+    oIfood.StatusOrder(cdsPollingcorrelationId.AsString , CancellationAccepted, bAccepted);
+
+    Log(Format('O %s do seu pedido %s foi %b', [CancellationAccepted, cdsPollingcorrelationId.AsString, bAccepted]));
+  finally
+    FreeAndNil(oIfood);
+  end;
+end;
+
+procedure TFormMain.btnCancellationDeniedClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bAccepted: Boolean;
+begin
+
+  try
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+    oIfood.StatusOrder(cdsPollingcorrelationId.AsString , CancellationDenied, bAccepted);
+
+    Log(Format('O %s do seu pedido %s foi %b', [CancellationDenied, cdsPollingcorrelationId.AsString, bAccepted]));
+  finally
+    FreeAndNil(oIfood);
+  end;
+end;
+
+procedure TFormMain.btnCancellationRequestClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bAccepted: Boolean;
+begin
+
+  try
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+    oIfood.StatusOrder(cdsPollingcorrelationId.AsString , CancellationRequested, bAccepted);
+
+    Log(Format('O %s do seu pedido %s foi %b', [CancellationRequested, cdsPollingcorrelationId.AsString, bAccepted]));
+  finally
+    FreeAndNil(oIfood);
+  end;
 end;
 
 procedure TFormMain.btnClearClick(Sender: TObject);
@@ -246,10 +366,10 @@ begin
   try
     oAvailabilities := TObjectList<TAvailability>.Create;
     try
-      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
-        CONTENTTYPE_APPLICATION_JSON);
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br');
       oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
-      Log(oIfood.MerchantAvailability(FMerchants.Items[cbRestaurant.ItemIndex].id, oAvailabilities).Format);
+      Log(oIfood.MerchantAvailability(FMerchants.Items[cbRestaurant.ItemIndex]
+        .id, oAvailabilities).Format);
 
       SetStatusRestaurant(oAvailabilities);
 
@@ -271,8 +391,7 @@ begin
   try
     oMerchant := TMerchant.Create;
     try
-      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
-        CONTENTTYPE_APPLICATION_JSON);
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br');
       oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
       Log(oIfood.Merchants(FMerchants).Format);
       for oMerchant in FMerchants do
@@ -291,8 +410,25 @@ begin
     end;
   finally
     FreeAndNil(oIfood);
-    // FreeAndNil(oMerchant);
   end;
+end;
+
+procedure TFormMain.btnOrderDetailClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  oOrderDetail: TOrderDetail;
+begin
+  try
+    oOrderDetail := TOrderDetail.Create;
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+
+    oIfood.OrderDetail(cdsPollingcorrelationId.AsString, oOrderDetail);
+  finally
+    FreeAndNil(oIfood);
+    FreeAndNil(oOrderDetail)
+  end;
+  
 end;
 
 procedure TFormMain.btnPostUnavailabilitiesClick(Sender: TObject);
@@ -308,8 +444,7 @@ begin
     sDescricao := 'Erro na internet';
     iMinuto := 30;
     try
-      oIfood := Tifood.Create('https://pos-api.ifood.com.br',
-        CONTENTTYPE_APPLICATION_JSON);
+      oIfood := Tifood.Create('https://pos-api.ifood.com.br');
       oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
 
       Log(oIfood.Unavailabilities(FMerchants.Items[cbRestaurant.ItemIndex].id,
@@ -323,6 +458,56 @@ begin
     FreeAndNil(oUnavailability);
   end;
 
+end;
+
+procedure TFormMain.btnReadyDeliveryClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  bAccepted: Boolean;
+begin
+
+  try
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+    oIfood.StatusOrder(cdsPollingcorrelationId.AsString , ReadyToDeliver, bAccepted);
+
+    Log(Format('Pedido %s foi %s', [cdsPollingcorrelationId.AsString, ReadyToDeliver]));
+  finally
+    FreeAndNil(oIfood);
+  end;
+end;
+
+procedure TFormMain.btnPollingClick(Sender: TObject);
+var
+  oIfood: Tifood;
+  olPolling: TObjectList<TPolling>;
+  oPolling: TPolling;
+begin
+  try
+    olPolling := TObjectList<TPolling>.Create;
+    oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+    oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+
+    oIfood.Polling(olPolling);
+
+    cdsPolling.Open;  
+
+    for oPolling in olPolling do
+    begin
+      cdsPolling.Insert;
+      cdsPollingcode.AsString := oPolling.code;
+      cdsPollingcorrelationId.AsString := oPolling.correlationId;
+      cdsPollingcreatedAt.AsString := oPolling.createdAt;
+      cdsPollingid.AsString := oPolling.id;
+      cdsPolling.Post;      
+    end;
+
+
+
+  finally
+    FreeAndNil(oIfood);
+    FreeAndNil(oPolling);
+  end;
 end;
 
 end.
