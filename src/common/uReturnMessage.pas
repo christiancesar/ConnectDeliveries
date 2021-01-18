@@ -19,6 +19,11 @@ Type
     { protected declarations }
 
   public
+    property success: Boolean read Fsuccess write Fsuccess;
+    property code: Integer read Fcode write Fcode;
+    property codeDescription: String read FcodeDescription write FcodeDescription;
+    property &object: String read Fobject write Fobject ;
+
     function AsJson: TJSONValue;
     function AsObject: TReturnMessage;
 
@@ -29,8 +34,6 @@ Type
   end;
 
 implementation
-
-{ TReturnMessage }
 
 { TReturnMessage }
 

@@ -6,14 +6,16 @@ uses
   REST.Json, System.Json, REST.Types, System.Generics.Collections,
   uiFood.Authentication, uiFood.Credential, uBaseDelivery, uiFood.Merchant,
   uiFood.Unavailability, uiFood.Availability, uiFood.Polling, System.Classes,
-  System.SysUtils, uiFood.OrderDetail;
+  System.SysUtils, uiFood.OrderDetail, uReturnMessage;
 
 Type
   TiFood = class(TBaseDelivery)
   private
     { private declarations }
   protected
-    function ReturnMessage: TJSONValue;
+    function ReturnMessageObject: TReturnMessage;
+
+    function ReturnMessage: TJSONValue; overload;
     { protected declarations }
   public
     { Authentication }
@@ -21,15 +23,15 @@ Type
     /// <summary>
     /// Emite um token de acesso para comunicação de todos os endpoints, necessário em todas as chamadas da API.
     /// </summary>
-    function Authentication(const Credential: TCredential;
-      out OAuthentication: TAuthentication): TJSONValue;
+    function Authentication(const ACredential: TCredential;
+      out OAuthentication: TAuthentication): TReturnMessage;
 
     { Merchant v1 }
 
     /// <summary>
     /// Lista os merchants que o usuário tem permissão incluindo o merchant_uuid
     /// </summary>
-    function Merchants(out AMerchant: TObjectList<TMerchant>): TJSONValue;
+    function Merchants(out AMerchant: TObjectList<TMerchant>): TReturnMessage;
 
     /// <summary>
     /// Lista todas as indisponibilidades cadastradas para um merchant.
@@ -37,20 +39,20 @@ Type
     /// para removê-la
     /// </summary>
     function Unavailabilities(AMerchantUUID: String;
-      out AUnavailabilities: TObjectList<TUnavailability>): TJSONValue;
+      out AUnavailabilities: TObjectList<TUnavailability>): TReturnMessage;
       Overload;
 
     /// <summary>
     /// Remove indisponibilidades cadastradas
     /// </summary>
-    function Unavailabilities(AMerchantUUID, AUnavailabilityId: String;
-      out ADelete: Boolean): TJSONValue; Overload;
+    function Unavailabilities(AMerchantUUID, AUnavailabilityId: String)
+      : TReturnMessage; Overload;
 
     /// <summary>
     /// Cadastra uma indisponibilidade para o merchant.
     /// </summary>
     function Unavailabilities(AMerchantUUID, ADescription: String;
-      AMinutes: Integer; AUnavailability: TUnavailability): TJSONValue;
+      AMinutes: Integer; AUnavailability: TUnavailability): TReturnMessage;
       Overload;
 
     { Merchant v2 }
@@ -58,13 +60,13 @@ Type
     /// Retorna o status do merchant na plataforma
     /// </summary>
     function MerchantAvailability(AMerchantUUID: String;
-      out AAvailabilities: TObjectList<TAvailability>): TJSONValue;
+      out AAvailabilities: TObjectList<TAvailability>): TReturnMessage;
 
     { Orders }
     /// <summary>
     /// Receber novos pedidos: Obtém todos os eventos ainda não recebidos
     /// </summary>
-    function Polling(out APolling: TObjectList<TPolling>): TJSONValue;
+    function Polling(out APolling: TObjectList<TPolling>): TReturnMessage;
 
     /// <summary>
     /// Após o PDV/POS receber os eventos de pedido via polling, é necessário
@@ -107,7 +109,7 @@ const
 implementation
 
 uses
-  uReturnMessage;
+  FMX.Dialogs;
 
 { TiFood }
 
@@ -153,23 +155,24 @@ begin
 
 end;
 
-function TiFood.Authentication(const Credential: TCredential;
-  out OAuthentication: TAuthentication): TJSONValue;
+function TiFood.Authentication(const ACredential: TCredential;
+  out OAuthentication: TAuthentication): TReturnMessage;
 begin
 
-  if not Assigned(Credential) then
+  if not Assigned(ACredential) then
     raise Exception.Create('Credencial fazia!');
 
   FRequest.Method := rmPOST;
   FRequest.Resource := '/oauth/token';
-  FRequest.AddParameter('client_id', Credential.client_id);
-  FRequest.AddParameter('client_secret', Credential.client_secret);
-  FRequest.AddParameter('grant_type', Credential.grant_type);
-  FRequest.AddParameter('username', Credential.username);
-  FRequest.AddParameter('password', Credential.password);
+  FRequest.AddParameter('client_id', ACredential.client_id);
+  FRequest.AddParameter('client_secret', ACredential.client_secret);
+  FRequest.AddParameter('grant_type', ACredential.grant_type);
+  FRequest.AddParameter('username', ACredential.username);
+  FRequest.AddParameter('password', ACredential.password);
   FRequest.Execute;
 
-  OAuthentication.CleanupInstance;
+  if Assigned(OAuthentication) then
+    OAuthentication.CleanupInstance;
 
   if FResponse.Status.Success then
   begin
@@ -177,7 +180,7 @@ begin
       (FResponse.JSONValue as TJSONObject);
   end;
 
-  Result := ReturnMessage;
+  Result := ReturnMessageObject;
 
 end;
 
@@ -199,10 +202,11 @@ var
   sVersion: String;
 begin
 
-  if AStatus.Equals(Integration) or AStatus.Equals(Conformation) or AStatus.Equals(Dispatchh) then
+  if AStatus.Equals(Integration) or AStatus.Equals(Conformation) or
+    AStatus.Equals(Dispatchh) then
     sVersion := 'v1.0'
-  else if AStatus.Equals(ReadyToDeliver) or AStatus.Equals(CancellationAccepted) or
-    AStatus.Equals(CancellationDenied) then
+  else if AStatus.Equals(ReadyToDeliver) or AStatus.Equals(CancellationAccepted)
+    or AStatus.Equals(CancellationDenied) then
     sVersion := 'v2.0'
   else
     sVersion := 'v3.0';
@@ -220,7 +224,7 @@ begin
 end;
 
 function TiFood.MerchantAvailability(AMerchantUUID: String;
-  out AAvailabilities: TObjectList<TAvailability>): TJSONValue;
+  out AAvailabilities: TObjectList<TAvailability>): TReturnMessage;
 var
   I: Integer;
   jaAvailabilities: TJSONArray;
@@ -247,13 +251,14 @@ begin
 
     end;
 
-    Result := ReturnMessage;
+    Result := ReturnMessageObject;
   finally
     FreeAndNil(jaAvailabilities);
   end;
 end;
 
-function TiFood.Merchants(out AMerchant: TObjectList<TMerchant>): TJSONValue;
+function TiFood.Merchants(out AMerchant: TObjectList<TMerchant>)
+  : TReturnMessage;
 var
   I: Integer;
 begin
@@ -274,7 +279,7 @@ begin
 
   end;
 
-  Result := ReturnMessage;
+  Result := ReturnMessageObject;
 
 end;
 
@@ -298,7 +303,7 @@ begin
   Result := ReturnMessage;
 end;
 
-function TiFood.Polling(out APolling: TObjectList<TPolling>): TJSONValue;
+function TiFood.Polling(out APolling: TObjectList<TPolling>): TReturnMessage;
 var
   I: Integer;
 begin
@@ -318,7 +323,7 @@ begin
     end;
   end;
 
-  Result := ReturnMessage;
+  Result := ReturnMessageObject;
 
 end;
 
@@ -328,8 +333,14 @@ begin
     FResponse.StatusCode, FResponse.StatusText).AsJson;
 end;
 
+function TiFood.ReturnMessageObject: TReturnMessage;
+begin
+  Result := TReturnMessage.Create(FResponse.Status.Success, FResponse.JSONText,
+    FResponse.StatusCode, FResponse.StatusText).AsObject;
+end;
+
 function TiFood.Unavailabilities(AMerchantUUID, ADescription: String;
-  AMinutes: Integer; AUnavailability: TUnavailability): TJSONValue;
+  AMinutes: Integer; AUnavailability: TUnavailability): TReturnMessage;
 var
   joUnavailability: TJSONObject;
   jvUnavailability: TJSONValue;
@@ -357,7 +368,7 @@ begin
         (FResponse.JSONValue as TJSONObject);
     end;
 
-    Result := ReturnMessage;
+    Result := ReturnMessageObject;
 
   finally
     FreeAndNil(joUnavailability);
@@ -366,8 +377,8 @@ begin
 
 end;
 
-function TiFood.Unavailabilities(AMerchantUUID, AUnavailabilityId: String;
-  out ADelete: Boolean): TJSONValue;
+function TiFood.Unavailabilities(AMerchantUUID, AUnavailabilityId: String)
+  : TReturnMessage;
 var
   I: Integer;
 begin
@@ -379,13 +390,11 @@ begin
   FRequest.Execute;
   FRequest.Params.Clear;
 
-  ADelete := FResponse.Status.Success;
-
-  Result := ReturnMessage;
+  Result := ReturnMessageObject;
 end;
 
 function TiFood.Unavailabilities(AMerchantUUID: String;
-  out AUnavailabilities: TObjectList<TUnavailability>): TJSONValue;
+  out AUnavailabilities: TObjectList<TUnavailability>): TReturnMessage;
 var
   I: Integer;
 begin
@@ -406,7 +415,7 @@ begin
 
   end;
 
-  Result := ReturnMessage;
+  Result := ReturnMessageObject;
 end;
 
 end.
