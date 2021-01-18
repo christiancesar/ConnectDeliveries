@@ -69,4 +69,4 @@ __recovery/
 modules/
 
 #.env
-example/.env.json
+*.env.json
