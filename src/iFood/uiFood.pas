@@ -39,8 +39,8 @@ Type
     /// para removê-la
     /// </summary>
     function Unavailabilities(AMerchantUUID: String;
-      out AUnavailabilities: TObjectList<TUnavailability>): TReturnMessage;
-      Overload;
+      out AUnavailabilities: TObjectList<TUnavailability>)
+      : TReturnMessage; Overload;
 
     /// <summary>
     /// Remove indisponibilidades cadastradas
@@ -52,8 +52,8 @@ Type
     /// Cadastra uma indisponibilidade para o merchant.
     /// </summary>
     function Unavailabilities(AMerchantUUID, ADescription: String;
-      AMinutes: Integer; AUnavailability: TUnavailability): TReturnMessage;
-      Overload;
+      AMinutes: Integer; AUnavailability: TUnavailability)
+      : TReturnMessage; Overload;
 
     { Merchant v2 }
     /// <summary>
@@ -76,16 +76,16 @@ Type
     /// máximo 2000 ids de eventos. Faça uma request de acknowledgment para cada
     /// request de polling com resultados.
     /// </summary>
-    function Acknowledgment(AIdProcess: TStrings): Boolean;
+    function Acknowledgment(AIdProcess: TStringList): Boolean;
 
     /// <summary>
     /// Obtém os detalhes do pedido
     /// </summary>
     function OrderDetail(ACorrelationId: String; out AOrderDetail: TOrderDetail)
-      : TJSONValue;
+      : TReturnMessage;
 
     function StatusOrder(ACorrelationId, AStatus: String; AAccepted: Boolean)
-      : TJSONValue;
+      : TReturnMessage;
 
     constructor Create(ABaseUrl: String);
     destructor Destroy; override;
@@ -109,48 +109,44 @@ const
 implementation
 
 uses
-  FMX.Dialogs;
+  FMX.Dialogs, REST.HttpClient;
 
 { TiFood }
 
-function TiFood.Acknowledgment(AIdProcess: TStrings): Boolean;
+function TiFood.Acknowledgment(AIdProcess: TStringList): Boolean;
 var
   joAcknowledgment: TJSONObject;
   jaAcknowledgment: TJSONArray;
+  ssData: TStringStream;
   Id: String;
 begin
   Result := False;
 
-  joAcknowledgment := TJSONObject.Create;
   jaAcknowledgment := TJSONArray.Create;
   try
-    { Cria Objeto Json }
+    { Cria Array Json }
     for Id in AIdProcess do
     begin
-      joAcknowledgment.AddPair('id', TJSONString(Id));
+      joAcknowledgment := TJSONObject.Create(TJSONPair.Create('id', TJSONString.Create(Id)));
       jaAcknowledgment.AddElement(joAcknowledgment as TJSONValue);
-      joAcknowledgment.Free;
     end;
+
+    ssData := TStringStream.Create(jaAcknowledgment.Format);
 
     FRequest.Method := rmPOST;
     FRequest.Resource := '/v1.0/events/acknowledgment';
-    FRequest.Params.AddBody(jaAcknowledgment);
+    FRequest.Params.AddBody(ssData, ctAPPLICATION_JSON);
+    FRequest.Execute;
     FRequest.Params.Clear;
 
     if FResponse.Status.Success then
     begin
-
       Result := True;
-
     end
-    else
-      raise Exception.Create(Format('Code: %s %s Message: %s',
-        [FResponse.StatusCode.ToString, FResponse.StatusText,
-        FResponse.JSONText]));
 
   finally
-    FreeAndNil(joAcknowledgment);
     FreeAndNil(jaAcknowledgment);
+    FreeAndNil(ssData);
   end;
 
 end;
@@ -197,7 +193,7 @@ begin
 end;
 
 function TiFood.StatusOrder(ACorrelationId, AStatus: String; AAccepted: Boolean)
-  : TJSONValue;
+  : TReturnMessage;
 var
   sVersion: String;
 begin
@@ -219,7 +215,7 @@ begin
 
   AAccepted := FResponse.Status.Success;
 
-  Result := ReturnMessage;
+  Result := ReturnMessageObject;
 
 end;
 
@@ -230,31 +226,28 @@ var
   jaAvailabilities: TJSONArray;
   joAvailability: TJSONObject;
 begin
-  try
-    FRequest.Method := rmGET;
-    FRequest.Resource := Format('/merchant/v2.0/merchants/%s/availabilities',
-      [AMerchantUUID]);
-    FRequest.Execute;
-    FRequest.Params.Clear;
 
-    if FResponse.Status.Success then
+  FRequest.Method := rmGET;
+  FRequest.Resource := Format('/merchant/v2.0/merchants/%s/availabilities',
+    [AMerchantUUID]);
+  FRequest.Execute;
+  FRequest.Params.Clear;
+
+  if FResponse.Status.Success then
+  begin
+    jaAvailabilities := TJSONArray.Create;
+    jaAvailabilities := (FResponse.JSONValue as TJSONArray);
+
+    for I := 0 to jaAvailabilities.Count - 1 do
     begin
-      jaAvailabilities := TJSONArray.Create;
-      jaAvailabilities := (FResponse.JSONValue as TJSONArray);
-
-      for I := 0 to jaAvailabilities.Count - 1 do
-      begin
-        joAvailability.CleanupInstance;
-        joAvailability := (jaAvailabilities.Items[I] as TJSONObject);
-        AAvailabilities.Add(TJson.JsonToObject<TAvailability>(joAvailability));
-      end;
-
+      joAvailability.CleanupInstance;
+      joAvailability := (jaAvailabilities.Items[I] as TJSONObject);
+      AAvailabilities.Add(TJson.JsonToObject<TAvailability>(joAvailability));
     end;
 
-    Result := ReturnMessageObject;
-  finally
-    FreeAndNil(jaAvailabilities);
   end;
+
+  Result := ReturnMessageObject;
 end;
 
 function TiFood.Merchants(out AMerchant: TObjectList<TMerchant>)
@@ -284,7 +277,7 @@ begin
 end;
 
 function TiFood.OrderDetail(ACorrelationId: String;
-  out AOrderDetail: TOrderDetail): TJSONValue;
+  out AOrderDetail: TOrderDetail): TReturnMessage;
 var
   I: Integer;
 begin
@@ -300,7 +293,7 @@ begin
       (FResponse.JSONValue as TJSONObject);
   end;
 
-  Result := ReturnMessage;
+  Result := ReturnMessageObject;
 end;
 
 function TiFood.Polling(out APolling: TObjectList<TPolling>): TReturnMessage;
@@ -321,10 +314,13 @@ begin
       APolling.Add(TJson.JsonToObject<TPolling>
         (((FResponse.JSONValue as TJSONArray).Items[I] as TJSONObject)));
     end;
+    Result := ReturnMessageObject;
+  end
+  else if FResponse.StatusCode = 404 then
+  begin
+    Result := ReturnMessageObject;
+    Abort;
   end;
-
-  Result := ReturnMessageObject;
-
 end;
 
 function TiFood.ReturnMessage: TJSONValue;
@@ -343,38 +339,27 @@ function TiFood.Unavailabilities(AMerchantUUID, ADescription: String;
   AMinutes: Integer; AUnavailability: TUnavailability): TReturnMessage;
 var
   joUnavailability: TJSONObject;
-  jvUnavailability: TJSONValue;
 begin
-  { Cria Objeto Json }
-  joUnavailability := TJSONObject.Create;
-  jvUnavailability := TJSONValue.Create;
 
-  try
-    joUnavailability.AddPair('description', TJSONString(ADescription));
-    joUnavailability.AddPair('minutes', TJSONNumber.Create(AMinutes));
+  joUnavailability := TJSONObject.Create();
 
-    jvUnavailability := (joUnavailability as TJSONValue);
-    FRequest.Method := rmPOST;
-    FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities:now',
-      [AMerchantUUID]);
+  joUnavailability.AddPair('description', TJSONString.Create(ADescription));
+  joUnavailability.AddPair('minutes', TJSONNumber.Create(AMinutes));
+  FRequest.Method := rmPOST;
+  FRequest.Resource := Format('/v1.0/merchants/%s/unavailabilities:now',
+    [AMerchantUUID]);
 
-    FRequest.Params.AddBody(joUnavailability.ToJSON, ctAPPLICATION_JSON);
-    FRequest.Execute;
-    FRequest.Params.Clear;
+  FRequest.AddBody(joUnavailability);
+  FRequest.Execute;
+  FRequest.Params.Clear;
 
-    if FResponse.Status.Success then
-    begin
-      AUnavailability := TJson.JsonToObject<TUnavailability>
-        (FResponse.JSONValue as TJSONObject);
-    end;
-
-    Result := ReturnMessageObject;
-
-  finally
-    FreeAndNil(joUnavailability);
-    FreeAndNil(jvUnavailability);
+  if FResponse.Status.Success then
+  begin
+    AUnavailability := TJson.JsonToObject<TUnavailability>
+      (FResponse.JSONValue as TJSONObject);
   end;
 
+  Result := ReturnMessageObject;
 end;
 
 function TiFood.Unavailabilities(AMerchantUUID, AUnavailabilityId: String)

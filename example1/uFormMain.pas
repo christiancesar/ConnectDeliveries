@@ -13,7 +13,9 @@ uses
   System.JSON, REST.JSON, FMX.Forms, FMX.ListView.Types,
   FMX.ListView.Appearances, FMX.ListView.Adapters.Base, FMX.Menus, FMX.ListView,
   uReturnMessage, FMX.ComboEdit, System.Generics.Collections, FMX.ScrollBox,
-  FMX.Memo;
+  FMX.Memo, System.Rtti, System.Bindings.Outputs, FMX.Bind.Editors,
+  Data.Bind.EngExt, FMX.Bind.DBEngExt, Data.Bind.Components, Data.Bind.DBScope,
+  Data.DB;
 
 type
   TFormMain = class(TForm)
@@ -36,10 +38,10 @@ type
     tiOrders: TTabItem;
     Layout7: TLayout;
     Layout8: TLayout;
-    TabControl1: TTabControl;
-    OrdersList: TTabItem;
-    OrderDetail: TTabItem;
-    ListView1: TListView;
+    tcOrders: TTabControl;
+    tiOrdersList: TTabItem;
+    tiOrderDetail: TTabItem;
+    lvPolling: TListView;
     ppStatusOrder: TPopupMenu;
     miConfirmation: TMenuItem;
     miDispatch: TMenuItem;
@@ -76,6 +78,15 @@ type
     lblCreateUnavailability: TLabel;
     mMerchantAvailability: TMemo;
     lblPolling: TLabel;
+    cdsPolling: TClientDataSet;
+    cdsPollingcode: TStringField;
+    cdsPollingcorrelationId: TStringField;
+    cdsPollingcreatedAt: TStringField;
+    cdsPollingid: TStringField;
+    bsPolling: TBindSourceDB;
+    BindingsList1: TBindingsList;
+    LinkListControlToField1: TLinkListControlToField;
+    mOrderDetail: TMemo;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
 
@@ -88,6 +99,8 @@ type
     procedure btnClick(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
     procedure btnLoginClick(Sender: TObject);
+    procedure lvPollingItemClick(const Sender: TObject;
+      const AItem: TListViewItem);
   private
     FCredential: TCredential;
     FAuth: TAuthentication;
@@ -115,6 +128,8 @@ type
     function DeleteUnavailability: Boolean;
     function CreateUnavailability(ADescription: String;
       AMinute: Integer): Boolean;
+    function OrderDetail(ACorrelationId: String): Boolean;
+    procedure FillOrderDetail(AOrderDatil: TJSONObject);
     { Private declarations }
   public
     { Public declarations }
@@ -177,10 +192,11 @@ procedure TFormMain.FillMerchantAvailability;
 var
   oMerchantAvailability: TAvailability;
 begin
+  mMerchantAvailability.Lines.Clear;
   for oMerchantAvailability in FMerchantAvailability do
   begin
     mMerchantAvailability.Lines.Add
-      ((TJson.ObjectToJsonObject(oMerchantAvailability) as TJsonObject).Format);
+      ((TJson.ObjectToJsonObject(oMerchantAvailability) as TJSONObject).Format);
   end;
 
 end;
@@ -201,15 +217,22 @@ begin
 
 end;
 
+procedure TFormMain.FillOrderDetail(AOrderDatil: TJSONObject);
+begin
+  mOrderDetail.Lines.Clear;
+  mOrderDetail.Lines.Add(AOrderDatil.Format);
+end;
+
 procedure TFormMain.FillUnavailability;
 var
   oUnavailability: TUnavailability;
 begin
+  ceUnavailabilities.Clear;
+
   if not(FUnavailabilities.Count > 0) then
     ceUnavailabilities.Text := 'Não foram encontradas indisponibilidades.'
   else
   begin
-    ceUnavailabilities.Clear;
     for oUnavailability in FUnavailabilities do
     begin
       ceUnavailabilities.Items.Add(oUnavailability.description);
@@ -222,7 +245,7 @@ procedure TFormMain.FormCreate(Sender: TObject);
 var
   sEnv: TStringStream;
   sPath: String;
-  joJson: TJsonObject;
+  joJson: TJSONObject;
   jvJson: TJsonValue;
 begin
 
@@ -230,16 +253,16 @@ begin
     tcInitial.TabPosition := TTabPosition.None;
     tcInitial.ActiveTab := tiHome;
     sEnv := TStringStream.Create;
-    joJson := TJsonObject.Create;
+    joJson := TJSONObject.Create;
     try
       sPath := ExtractFilePath(System.SysUtils.GetCurrentDir);
       sEnv.LoadFromFile(sPath + '.env.json');
 
       { Convertendo o .env e procurando as credenciais de homologacao }
-      joJson := TJsonObject.ParseJSONValue(sEnv.DataString) as TJsonObject;
+      joJson := TJSONObject.ParseJSONValue(sEnv.DataString) as TJSONObject;
       jvJson := joJson.FindValue('credenciais.ifood.homologacao');
       FCredential := TCredential.Create;
-      FCredential := TJson.JsonToObject<TCredential>(jvJson as TJsonObject);
+      FCredential := TJson.JsonToObject<TCredential>(jvJson as TJSONObject);
 
       FAuth := TAuthentication.Create;
       FMerchants := TObjectList<TMerchant>.Create;
@@ -316,6 +339,33 @@ begin
   end;
 end;
 
+function TFormMain.OrderDetail(ACorrelationId: String): Boolean;
+var
+  oIfood: Tifood;
+  oOrderDetail: TOrderDetail;
+begin
+  Result := False;
+  oOrderDetail := TOrderDetail.Create;
+  oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+  try
+    try
+      oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+      if oIfood.OrderDetail(ACorrelationId, oOrderDetail).success then
+        FillOrderDetail(TJson.ObjectToJsonObject(oOrderDetail));
+    except
+      on E: EHTTPProtocolException do
+        ErrorMessage(Format('ClassName: %s | Code: %d | Message: %s',
+          [E.ClassName, E.ErrorCode, E.Message]));
+      on E: ENetHTTPClientException do
+        ErrorMessage(Format('ClassName: %s | Code: %d | Message: %s',
+          [E.ClassName, E.Message]));
+    end;
+  finally
+    oIfood.Free
+  end;
+
+end;
+
 function TFormMain.Polling: Boolean;
 var
   oIfood: Tifood;
@@ -324,27 +374,42 @@ var
     olPollings: TObjectList<TPolling>
   }
   olPollings: TObjectList<uIfood.Polling.tPolling>;
+  oPolling: uIfood.Polling.tPolling;
+  asAck: TStringList;
+
 begin
   Result := False;
 
   olPollings := TObjectList<uIfood.Polling.tPolling>.Create;
+  asAck := TStringList.Create;
   oIfood := Tifood.Create(FCredential.baseURL);
   try
     try
+      oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
       oReturnMessage := oIfood.Polling(olPollings);
       if oReturnMessage.success then
       begin
-        { Lista a lista de Pollings }
-        Result := True;
+        cdsPolling.Open;
+
+        for oPolling in olPollings do
+        begin
+          cdsPolling.Insert;
+          cdsPollingcode.AsString := oPolling.code;
+          cdsPollingcorrelationId.AsString := oPolling.correlationId;
+          cdsPollingcreatedAt.AsString := oPolling.createdAt;
+          cdsPollingid.AsString := oPolling.id;
+          cdsPolling.Post;
+          asAck.Add(oPolling.id);
+        end;
+
+        oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+        Result := oIfood.Acknowledgment(asAck);
       end;
     except
       on E: EHTTPProtocolException do
       begin
-        if E.ErrorCode = 404 then
-          Abort
-        else
-          ErrorMessage(Format('ClassName: %s | Code: %d | Message: %s',
-            [E.ClassName, E.ErrorCode, E.Message]));
+        ErrorMessage(Format('ClassName: %s | Code: %d | Message: %s',
+          [E.ClassName, E.ErrorCode, E.Message]));
       end;
       on E: ENetHTTPClientException do
         ErrorMessage(Format('ClassName: %s | Code: %d | Message: %s',
@@ -353,6 +418,7 @@ begin
   finally
     olPollings.Free;
     oIfood.Free;
+    asAck.Free;
   end;
 
 end;
@@ -371,8 +437,9 @@ begin
   if StrToIntDef(edtMinutesUnavailability.Text, 0) = 0 then
     raise Exception.Create('Minutes cannot equal 0!');
 
-  CreateUnavailability(edtDescriptionUnavailability.Text,
-    StrToIntDef(edtMinutesUnavailability.Text, 0));
+  if CreateUnavailability(edtDescriptionUnavailability.Text,
+    StrToIntDef(edtMinutesUnavailability.Text, 0)) then
+    ErrorMessage('Indisponibilidade cadastrada!');
 
 end;
 
@@ -382,7 +449,8 @@ begin
     Exit
   else
   begin
-    DeleteUnavailability;
+    if DeleteUnavailability then
+      ErrorMessage('Indisponibilidade deletada!');
   end;
 end;
 
@@ -408,7 +476,30 @@ end;
 
 function TFormMain.CreateUnavailability(ADescription: String;
   AMinute: Integer): Boolean;
+var
+  oIfood: Tifood;
+  oUnavailability: TUnavailability;
 begin
+  Result := False;
+  oUnavailability := TUnavailability.Create;
+  oIfood := Tifood.Create('https://pos-api.ifood.com.br');
+  try
+    try
+      oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
+      Result := oIfood.Unavailabilities(FMerchants.Items[ceMerchants.ItemIndex]
+        .id, ADescription, AMinute, oUnavailability).success;
+    except
+      on E: EHTTPProtocolException do
+        ErrorMessage(Format('ClassName: %s | Code: %d | Message: %s',
+          [E.ClassName, E.ErrorCode, E.Message]));
+      on E: ENetHTTPClientException do
+        ErrorMessage(Format('ClassName: %s | Code: %d | Message: %s',
+          [E.ClassName, E.Message]));
+    end;
+  finally
+    oIfood.Free;
+    oUnavailability.Free;
+  end;
 
 end;
 
@@ -444,7 +535,10 @@ end;
 
 procedure TFormMain.sStatusClick(Sender: TObject);
 begin
-  FRestaurantStatus := Authentication;
+  if sStatus.IsChecked then
+    FRestaurantStatus := Authentication
+  else
+    FRestaurantStatus := sStatus.IsChecked;
 end;
 
 procedure TFormMain.sStatusExit(Sender: TObject);
@@ -491,6 +585,7 @@ begin
   Result := False;
   oIfood := Tifood.Create('https://pos-api.ifood.com.br');
   try
+    FUnavailabilities.CleanupInstance;
     try
       oIfood.addHeader('Authorization', 'Bearer ' + FAuth.access_token);
       Result := oIfood.Unavailabilities(FMerchants.Items[ceMerchants.ItemIndex]
@@ -523,6 +618,15 @@ begin
         FillMerchantAvailability
     end;
   end;
+end;
+
+procedure TFormMain.lvPollingItemClick(const Sender: TObject;
+  const AItem: TListViewItem);
+var
+  sItemDetail: String;
+begin
+  OrderDetail(AItem.Detail);
+  tcOrders.ActiveTab := tiOrderDetail;
 end;
 
 end.

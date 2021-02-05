@@ -49,9 +49,10 @@ end;
 
 destructor TBaseDelivery.Destroy;
 begin
-  FreeAndNil(FClient);
-  FreeAndNil(FRequest);
-  FreeAndNil(FResponse);
+  FClient.Free;
+  FRequest.Free;
+//  if Assigned(FResponse) then
+  FResponse.Free;
 
   inherited;
 end;
