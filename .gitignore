@@ -70,4 +70,3 @@ modules/
 
 #.env
 .env.json
-example/
